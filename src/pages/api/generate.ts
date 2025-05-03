@@ -1,0 +1,149 @@
+import type { APIRoute } from 'astro';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize Google Gemini API
+const genAI = new GoogleGenerativeAI(import.meta.env.GOOGLE_GEMINI_API_KEY);
+
+export const POST: APIRoute = async ({ request }) => {
+  try {
+    const body = await request.json();
+    const { transcript } = body;
+
+    // Validate required fields
+    if (!transcript) {
+      return new Response(
+        JSON.stringify({
+          error: 'Transkript fehlt',
+        }),
+        {
+          status: 400,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+    }
+
+    // Create a prompt based on the user input
+    const prompt = createPrompt(transcript);
+
+    // Generate text using Google Gemini API
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Debug: Log the raw AI response
+    console.log('--- DEBUG: RAW AI RESPONSE ---');
+    console.log(text);
+    console.log('--- END RAW AI RESPONSE ---');
+
+    // Parse the structured response from the AI
+    const parsedResponse = parseAIResponse(text);
+    
+    // Debug: Log the parsed response
+    console.log('--- DEBUG: PARSED RESPONSE ---');
+    console.log(JSON.stringify(parsedResponse, null, 2));
+    console.log('--- END PARSED RESPONSE ---');
+
+    return new Response(
+      JSON.stringify(parsedResponse),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  } catch (error) {
+    console.error('Fehler beim Generieren des YouTube-Inhalts:', error);
+    
+    return new Response(
+      JSON.stringify({
+        error: 'Fehler beim Generieren des YouTube-Inhalts',
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+  }
+};
+
+function createPrompt(transcript: string): string {
+  return `Du bist ein YouTube-Content-Optimierungsassistent. Ich stelle dir ein Transkript aus einem YouTube-Video zur Verfügung, das Fehler, Füllwörter oder unklare Sätze enthalten kann.
+
+Deine Aufgabe ist es:
+1. Eine korrigierte und polierte Version des Transkripts zu erstellen
+2. Einen SEO-optimierten, aufmerksamkeitsstarken YouTube-Titel zu generieren (60-70 Zeichen, mit Keyword am Anfang)
+3. Eine SEHR LANGE YouTube-Beschreibung zu erstellen (ca. 1500 Zeichen, strukturiert in GENAU 3 sehr ausführlichen Absätzen)
+
+Für den Titel:
+- Hohe Lesbarkeit steht an erster Stelle! Verwende KEINE Sonderzeichen wie (), &, #, ! oder ähnliches
+- KEINE übertriebenen Wörter wie "ultimativ", "revolutionär", "unglaublich" - halte es sachlich und präzise
+- Verwende klare, direkte Sprache mit starken Verben und konkretem Nutzen
+- Setze auf präzise Fachbegriffe statt übertriebene Adjektive
+- Idealerweise 60-70 Zeichen (nicht zu kurz!)
+
+Für die Beschreibung:
+- WICHTIG: Die Zielgruppe sind Entwickler und die Developer-Community! Sprich die Leser entsprechend mit "ihr/euch/eure" (nicht mit "Sie/Ihnen") an und verwende eine lockere, technikaffine Sprache!
+- TOTAL WICHTIG: Jeder Absatz soll etwa 500 Zeichen lang sein! Die gesamte Beschreibung soll ca. 1500 Zeichen umfassen.
+- Die Beschreibung MUSS sehr detailliert und umfangreich sein mit vielen Informationen und Kontext!
+- Absatz 1: Hauptproblem und Lösung (8-10 Sätze) - WICHTIG: Der ERSTE SATZ muss mit dem Hauptkeyword beginnen!
+- Absatz 2: Ausführliche Details/Vorteile der im Video vorgestellten Methode (8-10 Sätze) - Erwähne konkrete Entwickler-Tools und technische Details!
+- Absatz 3: Detaillierter Call-to-Action, was der Zuschauer als nächstes tun soll (8-10 Sätze) - Direkte Ansprache der Developer-Community mit konkreten nächsten Schritten!
+- Verwende in allen Absätzen die wichtigsten Keywords, technische Begriffe und sehr detaillierte Beschreibungen
+
+Bitte formatiere deine Antwort wie folgt (benutze weiterhin die englischen Abschnittsbezeichnungen, aber der Inhalt soll auf Deutsch sein):
+
+TRANSCRIPT:
+[korrigierter Transkripttext]
+
+TITLE:
+[YouTube-Titel, 60-70 Zeichen]
+
+DESCRIPTION:
+[SEHR LANGE YouTube-Beschreibung in GENAU 3 sehr ausführlichen Absätzen mit jeweils ca. 500 Zeichen, insgesamt ca. 1500 Zeichen, mit informeller Du/Ihr-Ansprache für Entwickler]
+
+Hier ist das Transkript:
+${transcript}`;
+}
+
+function parseAIResponse(text: string): {
+  transcript: string;
+  title: string;
+  description: string;
+} {
+  // Default values in case parsing fails
+  let result = {
+    transcript: '',
+    title: '',
+    description: ''
+  };
+
+  try {
+    // Extract transcript
+    const transcriptMatch = text.match(/TRANSCRIPT:\s*([\s\S]*?)(?=TITLE:|$)/);
+    if (transcriptMatch && transcriptMatch[1]) {
+      result.transcript = transcriptMatch[1].trim();
+    }
+
+    // Extract title
+    const titleMatch = text.match(/TITLE:\s*([\s\S]*?)(?=DESCRIPTION:|$)/);
+    if (titleMatch && titleMatch[1]) {
+      result.title = titleMatch[1].trim();
+    }
+
+    // Extract description
+    const descriptionMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=$)/);
+    if (descriptionMatch && descriptionMatch[1]) {
+      result.description = descriptionMatch[1].trim();
+    }
+  } catch (error) {
+    console.error('Fehler beim Parsen der KI-Antwort:', error);
+  }
+
+  return result;
+}
