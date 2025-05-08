@@ -15,7 +15,7 @@ The application is specifically designed for the developer community and uses in
 ## Technology Stack
 
 - **Frontend**: [Astro](https://astro.build/) with [TailwindCSS](https://tailwindcss.com/)
-- **API**: Google Gemini 1.5 Pro via the Google Generative AI SDK
+- **API**: Primary: Google Gemini 1.5 Pro, Fallback: Anthropic Claude
 - **Language**: TypeScript
 
 ## Features
@@ -25,6 +25,7 @@ The application is specifically designed for the developer community and uses in
 - **Description Generator**: Creates detailed descriptions (approx. 1500 characters) in three paragraphs
 - **Copy-to-Clipboard**: Convenient buttons for copying transcript, title, and description
 - **Automatic Cleanup**: Removes single characters at the end of transcripts (common error in automatic transcription)
+- **AI Fallback**: Automatically switches to Claude when Google Gemini is unavailable or rate-limited
 
 ## Installation
 
@@ -39,12 +40,26 @@ The application is specifically designed for the developer community and uses in
    npm install
    ```
 
-3. Configure API key:
+3. Configure API keys:
    - Create a `.env` file in the root directory
-   - Add your Google Gemini API key:
+   - Add your API keys:
      ```
-     GOOGLE_GEMINI_API_KEY=your-api-key
+     GOOGLE_GEMINI_API_KEY=your-gemini-api-key
+     ANTHROPIC_API_KEY=your-anthropic-api-key
      ```
+   - To obtain an Anthropic API key:
+     1. Visit [Anthropic's website](https://console.anthropic.com/)
+     2. Sign up or log in to your account
+     3. Navigate to the API keys section
+     4. Create a new API key
+     5. Copy the key and add it to your `.env` file
+   
+   - To obtain a Google Gemini API key:
+     1. Visit [Google AI Studio](https://makersuite.google.com/)
+     2. Sign up or log in with your Google account
+     3. Navigate to the API keys section
+     4. Create a new API key
+     5. Copy the key and add it to your `.env` file
 
 4. Start the development server:
    ```bash

@@ -54,6 +54,7 @@ import Layout from '../layouts/Layout.astro';
                     <h2 class="text-lg font-medium text-gray-900 mb-2">Korrigiertes Transkript</h2>
                     <div id="transcript-content" class="p-4 bg-gray-50 rounded-md border border-gray-200 max-h-[300px] overflow-y-auto"></div>
                     <div id="transcript-cleaned" class="mt-1 text-xs text-amber-600 hidden">Hinweis: Ein einzelnes Zeichen am Ende des Transkripts wurde automatisch entfernt.</div>
+                <div id="model-used" class="mt-1 text-xs text-indigo-600">Modell: <span id="model-name"></span></div>
                 </div>
                 
                 <div>
@@ -84,6 +85,7 @@ import Layout from '../layouts/Layout.astro';
                 <div>
                     <h2 class="text-lg font-medium text-gray-900 mb-2">LinkedIn Post</h2>
                     <div id="linkedin-content-result" class="p-4 bg-gray-50 rounded-md border border-gray-200 whitespace-pre-line"></div>
+                <div id="li-model-used" class="mt-1 text-xs text-indigo-600">Modell: <span id="li-model-name"></span></div>
                 </div>
                 
                 <div class="flex justify-end">
@@ -213,6 +215,12 @@ import Layout from '../layouts/Layout.astro';
                     transcriptCleaned.classList.remove('hidden');
                 }
                 
+                // Display which AI model was used
+                const modelName = document.getElementById('model-name');
+                if (data.modelUsed && modelName) {
+                    modelName.textContent = data.modelUsed;
+                }
+                
             } catch (error) {
                 // Hide loading, show error
                 loading.classList.add('hidden');
@@ -267,6 +275,12 @@ import Layout from '../layouts/Layout.astro';
                 
                 // Display the generated content
                 linkedinContentResult.textContent = data.linkedinPost;
+                
+                // Display which AI model was used
+                const liModelName = document.getElementById('li-model-name');
+                if (data.modelUsed && liModelName) {
+                    liModelName.textContent = data.modelUsed;
+                }
                 
             } catch (error) {
                 // Hide loading, show error

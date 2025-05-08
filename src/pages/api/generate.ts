@@ -1,8 +1,18 @@
 import type { APIRoute } from "astro";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 
 // Initialize Google Gemini API
-const genAI = new GoogleGenerativeAI(import.meta.env.GOOGLE_GEMINI_API_KEY);
+const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY?.replace(/["']/g, '').trim();
+const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
+
+// Initialize Anthropic Claude API
+const ANTHROPIC_API_KEY = import.meta.env.ANTHROPIC_API_KEY?.replace(/["']/g, '').trim();
+
+// Initialize client with let so we can recreate it if needed
+let anthropic = new Anthropic({
+  apiKey: ANTHROPIC_API_KEY,
+});
 
 // Global prompt helpers for consistent content generation
 const brandNamesPrompt = "Achte auf die richtige Schreibweise dieser Marken und Begriffe: Pimcore, TYPO3, CypressIO, JavaScript, ChatGPT, OpenAI.";
@@ -49,16 +59,40 @@ export const POST: APIRoute = async ({ request }) => {
       prompt = createYoutubePrompt(transcript);
     }
 
-    // Generate text using Google Gemini API
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Try Google Gemini API first, fall back to Claude if rate limited
+    let text;
+    let modelUsed = "gemini-1.5-pro"; // Default model
+    
+    try {
+      // Generate text using Google Gemini API
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      text = response.text();
+    } catch (error) {
+      // Fall back to Claude
+      try {
+        // Fall back to Claude with a more available model
+        const claudeModel = "claude-3-haiku-20240307";
+        const message = await anthropic.messages.create({
+          model: claudeModel,
+          max_tokens: 4000,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+        });
+        
+        text = message.content[0].text;
+        modelUsed = claudeModel;
+      } catch (claudeError) {
+        throw new Error(`Content generation failed with both AI providers.`);
+      }
+    }
 
-    // Debug: Log the raw AI response
-    console.log(`--- DEBUG: RAW AI RESPONSE FOR ${type.toUpperCase()} ---`);
-    console.log(text);
-    console.log("--- END RAW AI RESPONSE ---");
+    // The generated text is now available in 'text' variable
 
     // Parse the structured response from the AI based on content type
     let parsedResponse;
@@ -68,15 +102,13 @@ export const POST: APIRoute = async ({ request }) => {
       parsedResponse = parseYoutubeResponse(text);
     }
 
-    // Debug: Log the parsed response
-    console.log("--- DEBUG: PARSED RESPONSE ---");
-    console.log(JSON.stringify(parsedResponse, null, 2));
-    console.log("--- END PARSED RESPONSE ---");
+    // The parsed response is now available in 'parsedResponse' variable
 
-    // Füge Information hinzu, wenn das Transkript bereinigt wurde
+    // Füge Information hinzu, wenn das Transkript bereinigt wurde und welches Modell verwendet wurde
     const responseData = {
       ...parsedResponse,
       transcriptCleaned: transcriptCleaned,
+      modelUsed: modelUsed,
     };
 
     return new Response(JSON.stringify(responseData), {
@@ -86,8 +118,7 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
   } catch (error) {
-    console.error("Fehler beim Generieren des Inhalts:", error);
-
+    // Generic error handling with appropriate message
     return new Response(
       JSON.stringify({
         error: "Fehler beim Generieren des Inhalts",
@@ -191,26 +222,22 @@ function parseYoutubeResponse(text: string): {
     description: "",
   };
 
-  try {
-    // Extract transcript
-    const transcriptMatch = text.match(/TRANSCRIPT:\s*([\s\S]*?)(?=TITLE:|$)/);
-    if (transcriptMatch && transcriptMatch[1]) {
-      result.transcript = transcriptMatch[1].trim();
-    }
+  // Extract transcript
+  const transcriptMatch = text.match(/TRANSCRIPT:\s*([\s\S]*?)(?=TITLE:|$)/);
+  if (transcriptMatch && transcriptMatch[1]) {
+    result.transcript = transcriptMatch[1].trim();
+  }
 
-    // Extract title
-    const titleMatch = text.match(/TITLE:\s*([\s\S]*?)(?=DESCRIPTION:|$)/);
-    if (titleMatch && titleMatch[1]) {
-      result.title = titleMatch[1].trim();
-    }
+  // Extract title
+  const titleMatch = text.match(/TITLE:\s*([\s\S]*?)(?=DESCRIPTION:|$)/);
+  if (titleMatch && titleMatch[1]) {
+    result.title = titleMatch[1].trim();
+  }
 
-    // Extract description
-    const descriptionMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=$)/);
-    if (descriptionMatch && descriptionMatch[1]) {
-      result.description = descriptionMatch[1].trim();
-    }
-  } catch (error) {
-    console.error("Fehler beim Parsen der KI-Antwort:", error);
+  // Extract description
+  const descriptionMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=$)/);
+  if (descriptionMatch && descriptionMatch[1]) {
+    result.description = descriptionMatch[1].trim();
   }
 
   return result;
@@ -224,14 +251,10 @@ function parseLinkedinResponse(text: string): {
     linkedinPost: "",
   };
 
-  try {
-    // Extract LinkedIn post
-    const linkedinMatch = text.match(/LINKEDIN POST:\s*([\s\S]*?)(?=$)/);
-    if (linkedinMatch && linkedinMatch[1]) {
-      result.linkedinPost = linkedinMatch[1].trim();
-    }
-  } catch (error) {
-    console.error("Fehler beim Parsen der KI-Antwort:", error);
+  // Extract LinkedIn post
+  const linkedinMatch = text.match(/LINKEDIN POST:\s*([\s\S]*?)(?=$)/);
+  if (linkedinMatch && linkedinMatch[1]) {
+    result.linkedinPost = linkedinMatch[1].trim();
   }
 
   return result;
