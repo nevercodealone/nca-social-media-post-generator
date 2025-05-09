@@ -198,7 +198,7 @@ ${avoidExaggerationPrompt}
 Formatierung:
 - LinkedIn-Post sollte zwischen 1000-1500 Zeichen lang sein
 - Verwende Absätze zur besseren Lesbarkeit
-- Nutze maximal ein Emoji pro Absatz (nicht übertreiben)
+- WICHTIG: KEINE EMOJIS VERWENDEN - verzichte komplett auf Emojis im Text
 - Füge 3-5 relevante Hashtags am Ende hinzu
 
 Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "LINKEDIN POST", aber der Inhalt soll komplett auf Deutsch sein):
