@@ -2,34 +2,58 @@ import type { APIRoute } from "astro";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
 
-// Initialize Google Gemini API
-const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY?.replace(/["']/g, '').trim();
-const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
+// Type definitions
+interface GenerateRequest {
+  transcript: string;
+  type?: "youtube" | "linkedin";
+}
 
-// Initialize Anthropic Claude API
+interface GenerateResponse {
+  transcript?: string;
+  title?: string;
+  description?: string;
+  linkedinPost?: string;
+  transcriptCleaned: boolean;
+  modelUsed: string;
+  error?: string;
+}
+
+interface AIError {
+  status?: number;
+  message: string;
+  provider: string;
+}
+
+// Initialize AI providers
+const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY?.replace(/["']/g, '').trim();
 const ANTHROPIC_API_KEY = import.meta.env.ANTHROPIC_API_KEY?.replace(/["']/g, '').trim();
 
-// Initialize client with let so we can recreate it if needed
-let anthropic = new Anthropic({
-  apiKey: ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(GOOGLE_GEMINI_API_KEY);
+const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
 // Global prompt helpers for consistent content generation
-const brandNamesPrompt = "Achte auf die richtige Schreibweise dieser Marken und Begriffe: Pimcore (nicht PimCore oder pimcore), TYPO3 (nicht Typo3 oder typo3), CypressIO (nicht Cypress.io oder cypress), JavaScript (nicht Javascript oder javascript), ChatGPT (nicht Chat-GPT oder chatgpt), OpenAI (nicht Open AI oder openai), React (nicht ReactJS oder react), Node.js (nicht NodeJS oder nodejs), Vue.js (nicht VueJS oder vuejs), TypeScript (nicht Typescript oder typescript).";
-const avoidExaggerationPrompt = "KEINE übertriebenen Wörter wie \"ultimativ\", \"revolutionär\", \"unglaublich\" - halte es sachlich und präzise.";
-const informalAddressPrompt = "Verwende eine informelle Anrede (\"ihr/euch/eure\" statt \"Sie/Ihnen\") und einen lockeren, direkten Ton.";
+const BRAND_NAMES_PROMPT = "Achte auf die richtige Schreibweise dieser Marken und Begriffe: Pimcore (nicht PimCore oder pimcore), TYPO3 (nicht Typo3 oder typo3), CypressIO (nicht Cypress.io oder cypress), JavaScript (nicht Javascript oder javascript), ChatGPT (nicht Chat-GPT oder chatgpt), OpenAI (nicht Open AI oder openai), React (nicht ReactJS oder react), Node.js (nicht NodeJS oder nodejs), Vue.js (nicht VueJS oder vuejs), TypeScript (nicht Typescript oder typescript), PHP (nicht php oder Php), PHPUnit (nicht PhpUnit oder phpunit), PHPStan (nicht Phpstan oder php-stan), RectorPHP (nicht Rector oder rector-php), Vitest (nicht vitest oder vi-test), Make.com (nicht Make, Make.io oder make.com).";
+const AVOID_EXAGGERATION_PROMPT = "KEINE übertriebenen Wörter wie \"ultimativ\", \"revolutionär\", \"unglaublich\" - halte es sachlich und präzise.";
+const INFORMAL_ADDRESS_PROMPT = "Verwende eine informelle Anrede (\"ihr/euch/eure\" statt \"Sie/Ihnen\") und einen lockeren, direkten Ton.";
+
+// Available models for fallback
+const AI_MODELS = {
+  google: ["gemini-1.5-pro", "gemini-1.5-flash"],
+  anthropic: ["claude-3-haiku-20240307", "claude-3-sonnet-20240229"]
+};
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const body = await request.json();
-    let { transcript, type = "youtube" } = body;
+    const body = await request.json() as GenerateRequest;
+    const { type = "youtube" } = body;
+    let { transcript } = body;
     let transcriptCleaned = false;
 
     // Validate required fields
-    if (!transcript) {
+    if (!transcript || typeof transcript !== "string" || transcript.trim().length === 0) {
       return new Response(
         JSON.stringify({
-          error: "Transkript fehlt",
+          error: "Transkript fehlt oder ist ungültig",
         }),
         {
           status: 400,
@@ -40,75 +64,116 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Bereinige Transkript: Entferne einzelne Zeichen am Ende (häufige Fehler bei Transkriptionen)
-    const words = transcript.trim().split(/\s+/);
-    if (words.length > 0 && words[words.length - 1].length === 1) {
-      words.pop(); // Entferne das letzte Wort, wenn es nur ein Zeichen ist
-      transcript = words.join(" ");
-      transcriptCleaned = true;
-      console.log(
-        "Ein einzelnes Zeichen am Ende des Transkripts wurde entfernt."
+    // Validate type
+    if (type !== "youtube" && type !== "linkedin") {
+      return new Response(
+        JSON.stringify({
+          error: "Ungültiger Typ. Erlaubt sind: youtube, linkedin",
+        }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
     }
 
-    // Create a prompt based on the user input and content type
-    let prompt;
-    if (type === "linkedin") {
-      prompt = createLinkedinPrompt(transcript);
-    } else {
-      prompt = createYoutubePrompt(transcript);
+    // Clean transcript: Remove single characters at the end
+    const words = transcript.trim().split(/\s+/);
+    if (words.length > 0 && words[words.length - 1].length === 1) {
+      words.pop();
+      transcript = words.join(" ");
+      transcriptCleaned = true;
+      console.log("Ein einzelnes Zeichen am Ende des Transkripts wurde entfernt.");
     }
 
-    // Try Google Gemini API first, fall back to Claude if rate limited
-    let text;
-    let modelUsed = "gemini-1.5-pro"; // Default model
-    
-    try {
-      // Generate text using Google Gemini API
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      text = response.text();
-    } catch (error) {
-      // Fall back to Claude
+    // Create prompt based on content type
+    const prompt = type === "linkedin" 
+      ? createLinkedinPrompt(transcript) 
+      : createYoutubePrompt(transcript);
+
+    // Try to generate content with AI providers
+    let text: string;
+    let modelUsed: string = "";
+    const errors: AIError[] = [];
+
+    // Try Google Gemini models
+    for (const model of AI_MODELS.google) {
       try {
-        // Fall back to Claude with a more available model
-        const claudeModel = "claude-3-haiku-20240307";
-        const message = await anthropic.messages.create({
-          model: claudeModel,
-          max_tokens: 4000,
-          messages: [
-            {
-              role: "user",
-              content: prompt
-            }
-          ],
+        const genModel = genAI.getGenerativeModel({ model });
+        const result = await genModel.generateContent(prompt);
+        const response = await result.response;
+        text = response.text();
+        modelUsed = model;
+        break;
+      } catch (error: any) {
+        errors.push({
+          provider: "Google Gemini",
+          message: error.message || "Unbekannter Fehler",
+          status: error.status,
         });
-        
-        text = message.content[0].text;
-        modelUsed = claudeModel;
-      } catch (claudeError) {
-        throw new Error(`Content generation failed with both AI providers.`);
+        console.error(`Fehler mit ${model}:`, error.message);
       }
     }
 
-    // The generated text is now available in 'text' variable
-
-    // Parse the structured response from the AI based on content type
-    let parsedResponse;
-    if (type === "linkedin") {
-      parsedResponse = parseLinkedinResponse(text);
-    } else {
-      parsedResponse = parseYoutubeResponse(text);
+    // If Google failed, try Anthropic models
+    if (!modelUsed) {
+      for (const model of AI_MODELS.anthropic) {
+        try {
+          const message = await anthropic.messages.create({
+            model,
+            max_tokens: 4000,
+            messages: [
+              {
+                role: "user",
+                content: prompt
+              }
+            ],
+          });
+          
+          text = message.content[0].text;
+          modelUsed = model;
+          break;
+        } catch (error: any) {
+          errors.push({
+            provider: "Anthropic Claude",
+            message: error.message || "Unbekannter Fehler",
+            status: error.status,
+          });
+          console.error(`Fehler mit ${model}:`, error.message);
+        }
+      }
     }
 
-    // The parsed response is now available in 'parsedResponse' variable
+    // If all providers failed
+    if (!modelUsed) {
+      const errorMessage = errors.map(e => `${e.provider}: ${e.message}`).join(", ");
+      return new Response(
+        JSON.stringify({
+          error: "Inhaltsgenerierung fehlgeschlagen",
+          details: errorMessage,
+          errors,
+        }),
+        {
+          status: 503,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
 
-    // Füge Information hinzu, wenn das Transkript bereinigt wurde und welches Modell verwendet wurde
-    const responseData = {
+    // Parse the structured response from AI
+    const parsedResponse = type === "linkedin" 
+      ? parseLinkedinResponse(text!) 
+      : parseYoutubeResponse(text!);
+
+    // Add metadata to response
+    const responseData: GenerateResponse = {
       ...parsedResponse,
-      transcriptCleaned: transcriptCleaned,
-      modelUsed: modelUsed,
+      transcriptCleaned,
+      modelUsed,
     };
 
     return new Response(JSON.stringify(responseData), {
@@ -117,11 +182,12 @@ export const POST: APIRoute = async ({ request }) => {
         "Content-Type": "application/json",
       },
     });
-  } catch (error) {
-    // Generic error handling with appropriate message
+  } catch (error: any) {
+    console.error("Unerwarteter Fehler:", error);
     return new Response(
       JSON.stringify({
-        error: "Fehler beim Generieren des Inhalts",
+        error: "Unerwarteter Fehler beim Generieren des Inhalts",
+        message: error.message,
       }),
       {
         status: 500,
@@ -133,35 +199,48 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-function createYoutubePrompt(transcript: string): string {
-  return `Du bist ein YouTube-Content-Optimierungsassistent. Ich stelle dir ein Transkript aus einem YouTube-Video zur Verfügung, das Fehler, Füllwörter oder unklare Sätze enthalten kann.
+function createPromptBase(transcript: string): string {
+  return `${BRAND_NAMES_PROMPT}
 
-${brandNamesPrompt}
+${AVOID_EXAGGERATION_PROMPT}
+
+${INFORMAL_ADDRESS_PROMPT}
+
+Transkript:
+${transcript}`;
+}
+
+function createYoutubePrompt(transcript: string): string {
+  const base = createPromptBase(transcript);
+  return `Du bist ein YouTube-Content-Optimierungsassistent für Entwickler-Content. Wichtiger Hinweis: Es handelt sich um YouTube SHORTS, NICHT um lange Videos.
+
+${base}
 
 Deine Aufgabe ist es:
-1. Eine 100% identische Version des Transkripts zu erstellen mit AUSSCHLIESSLICH korrigierter Interpunktion (Kommas, Punkte) und korrekter Schreibweise der Marken und Begriffe im Brandnames-Hinweis. EINZIGE AUSNAHME: Die im Brandnames-Hinweis genannten Marken und Begriffe müssen in der korrekten Schreibweise (Pimcore, TYPO3, CypressIO, JavaScript, ChatGPT, OpenAI) angegeben werden. Ansonsten ABSOLUT KEINE Änderungen an anderen Wörtern oder Wortreihenfolge! KEINE weiteren Rechtschreibkorrekturen, KEINE Änderungen am Satzbau. NUR Kommata und Punkte hinzufügen/korrigieren wo nötig plus korrekte Marken-Schreibweise!
+1. Eine 100% identische Version des Transkripts zu erstellen mit AUSSCHLIESSLICH korrigierter Interpunktion (Kommas, Punkte) und korrekter Schreibweise der Marken und Begriffe im Brandnames-Hinweis. EINZIGE AUSNAHME: Die im Brandnames-Hinweis genannten Marken und Begriffe müssen in der korrekten Schreibweise angegeben werden. Ansonsten ABSOLUT KEINE Änderungen an anderen Wörtern oder Wortreihenfolge! KEINE weiteren Rechtschreibkorrekturen, KEINE Änderungen am Satzbau. NUR Kommata und Punkte hinzufügen/korrigieren wo nötig plus korrekte Marken-Schreibweise!
 2. Einen SEO-optimierten, aufmerksamkeitsstarken YouTube-Titel zu generieren (60-70 Zeichen, mit Keyword am Anfang)
 3. Eine SEHR LANGE YouTube-Beschreibung zu erstellen (ca. 1500 Zeichen, strukturiert in GENAU 3 sehr ausführlichen Absätzen)
 
 Für den Titel:
+- Stelle eine kontroverse These auf oder provoziere eine Diskussion (Beispiel: "PHP ist 2024 immer noch die beste Wahl für...")
+- Nutze Formulierungen wie "Meine Meinung zu...", "Warum ich denke, dass...", "3 Gründe warum..."
 - Hohe Lesbarkeit steht an erster Stelle! Verwende KEINE Sonderzeichen wie (), &, #, ! oder ähnliches
-- ${avoidExaggerationPrompt}
-- Verwende klare, direkte Sprache mit starken Verben und konkretem Nutzen
 - Setze auf präzise Fachbegriffe statt übertriebene Adjektive (sofern im Transkript vorhanden)
 - Idealerweise 60-70 Zeichen (nicht zu kurz!)
 
 Für die Beschreibung:
-- WICHTIG: Die Zielgruppe sind Entwickler und die Developer-Community! ${informalAddressPrompt} Verwende eine technikaffine Sprache! ABER: Der Inhalt MUSS sich strikt auf das Transkript beziehen!
+- WICHTIG: Die Zielgruppe sind Entwickler und die Developer-Community! Verwende eine technikaffine Sprache! ABER: Der Inhalt MUSS sich strikt auf das Transkript beziehen!
 - TOTAL WICHTIG: Jeder Absatz soll etwa 500 Zeichen lang sein! Die gesamte Beschreibung soll ca. 1500 Zeichen umfassen.
 - Die Beschreibung MUSS sehr detailliert und umfangreich sein mit vielen Informationen und Kontext, ABER **AUSSCHLIESSLICH BASIEREND AUF DEM TRANSKRIPTINHALT!** Erfinde nichts!
-- Absatz 1: Hauptproblem und Lösung/Diskussionspunkt (8-10 Sätze) - WICHTIG: Der ERSTE SATZ muss mit dem Hauptkeyword beginnen! **Stelle sicher, dass Problem und Diskussion direkt aus dem Transkript abgeleitet sind.**
-- Absatz 2: Ausführliche Details/Argumente/Punkte, die **im Video (Transkript) vorgestellt werden** (8-10 Sätze) - Erwähne konkrete Entwickler-Tools und technische Details **NUR, WENN SIE EXPLIZIT IM TRANSKRIPT VORKOMMEN!** Andernfalls, detailliere die im Transkript genannten allgemeinen Argumente, Aspekte oder Meinungen. **Erfinde keine Tools oder technischen Details, wenn sie nicht genannt wurden!**
-- Absatz 3: Detaillierter Call-to-Action, was der Zuschauer als nächstes tun soll (8-10 Sätze) - Direkte Ansprache der Developer-Community mit konkreten nächsten Schritten, die sich **logisch aus dem Transkriptinhalt ergeben** (z.B. zur Diskussion des im Video genannten Problems aufrufen, Meinung in Kommentaren teilen).
-- Verwende in allen Absätzen die wichtigsten Keywords und Begriffe **aus dem Transkript**.
+- Absatz 1: Stelle eine These oder kontroverse Meinung auf, die sich aus dem Transkript ergibt (8-10 Sätze) - WICHTIG: Der ERSTE SATZ muss mit dem Hauptkeyword beginnen und direkt eine Meinung oder These präsentieren!
+- Absatz 2: Führe Argumente und Gegenpositionen aus **die im Short (Transkript) erwähnt werden** (8-10 Sätze) - Formuliere Fragen wie "Was denkt ihr zu..." oder "Habt ihr ähnliche Erfahrungen mit..."
+- Absatz 3: Fordere die Community zur Diskussion auf (8-10 Sätze) - Stelle konkrete Fragen, lade zu Gegenargumenten ein, frage nach eigenen Erfahrungen!
+- Verwende Formulierungen wie: "Ich behaupte...", "Meiner Meinung nach...", "Was ist eure Erfahrung mit...", "Widersprecht mir gerne in den Kommentaren!"
 
 Hinweise:
 - Keine Programmiersprache schreiben, die nicht im Transkript vorkommt.
-- **ABSOLUT KRITISCH: Schreibe in der Beschreibung NUR das, was im Video (Transkript) besprochen wurde. Erfinde KEINE Informationen, Beispiele, Tools, Strategien oder Meinungen, die nicht explizit genannt werden, auch wenn andere Anweisungen (wie Zielgruppenansprache oder Länge) dies nahezulegen scheinen. Die Treue zum Transkriptinhalt hat oberste Priorität! Wenn das Transkript keine Details für Entwickler enthält, dann schreibe auch keine solchen Details in die Beschreibung, sondern bleibe allgemein, aber behalte den lockeren "ihr/euch"-Ton bei.**
+- NIEMALS Formulierungen wie "Im Video diskutieren wir" verwenden - es sind SHORTS!
+- **ABSOLUT KRITISCH: Schreibe in der Beschreibung NUR das, was im Short (Transkript) besprochen wurde. Erfinde KEINE Informationen, Beispiele, Tools, Strategien oder Meinungen, die nicht explizit genannt werden.**
 
 Bitte formatiere deine Antwort wie folgt (benutze weiterhin die englischen Abschnittsbezeichnungen, aber der Inhalt soll auf Deutsch sein):
 
@@ -169,31 +248,34 @@ TRANSCRIPT:
 [korrigierter Transkripttext]
 
 TITLE:
-[YouTube-Titel, 60-70 Zeichen]
+[YouTube-Titel mit These/Meinung, 60-70 Zeichen]
 
 DESCRIPTION:
-[SEHR LANGE YouTube-Beschreibung in GENAU 3 sehr ausführlichen Absätzen mit jeweils ca. 500 Zeichen, insgesamt ca. 1500 Zeichen, mit informeller Du/Ihr-Ansprache für Entwickler, ABER STRIKT AM TRANSKRIPTINHALT ORIENTIERT]
-
-Hier ist das Transkript:
-${transcript}`;
+[SEHR LANGE YouTube-Beschreibung in GENAU 3 sehr ausführlichen Absätzen mit jeweils ca. 500 Zeichen, insgesamt ca. 1500 Zeichen, mit kontroversen Thesen und Fragen an die Community]`;
 }
 
 function createLinkedinPrompt(transcript: string): string {
+  const base = createPromptBase(transcript);
   return `Du bist ein LinkedIn-Content-Optimierungsassistent. Ich stelle dir ein Transkript zur Verfügung, das ich in einen überzeugenden LinkedIn-Post umwandeln möchte.
 
-${brandNamesPrompt}
+${base}
 
 Deine Aufgabe ist es, einen professionellen und ansprechenden LinkedIn-Post auf Deutsch zu erstellen, der folgende Spezifikationen erfüllt:
 
 - Zielgruppe: Eigene Follower und Entscheider
 - Thema: Informativ herausstellen
 - Tone of Voice: Soll klar machen, dass ich viel Spaß an den Themen habe und diese direkt helfen; ich bringe das gerne in Demos und Remote Workshops in Teams
-- Anrede: ${informalAddressPrompt} "Demo" nur erwähnen, wenn es um Barrierefreies Webdesign oder Refactoring geht
+- Anrede: "Demo" nur erwähnen, wenn es um Barrierefreies Webdesign oder Refactoring geht
 - Abschluss: Eine sehr gute und motivierende Frage stellen, die dazu einlädt zu antworten und Leser als Experten wertschätzt
+
+Kontext-spezifische Beispiele:
+- Bei AI-Themen: Erwähne relevante AI-Tools wie ChatGPT, Gemini, Claude oder AI Studio
+- Bei PHP-Themen: Erwähne PHP-spezifische Tools wie PHPUnit, PHPStan, RectorPHP oder Composer
+- Bei JavaScript-Themen: Erwähne JS-Tools wie Node.js, npm, Vitest oder TypeScript
+- WICHTIG: Verwende NUR die Tools/Technologien, die inhaltlich zum Hauptthema passen - keine Vermischung!
 
 Nicht zu verwendende Wörter:
 - Revolution (und ähnliche übertriebene Begriffe)
-${avoidExaggerationPrompt}
 
 Formatierung:
 - LinkedIn-Post sollte zwischen 1000-1500 Zeichen lang sein
@@ -204,19 +286,12 @@ Formatierung:
 Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "LINKEDIN POST", aber der Inhalt soll komplett auf Deutsch sein):
 
 LINKEDIN POST:
-[Der komplette LinkedIn-Post auf Deutsch mit Absätzen und Hashtags]
-
-Hier ist das Transkript:
-${transcript}`;
+[Der komplette LinkedIn-Post auf Deutsch mit Absätzen und Hashtags]`;
 }
 
-function parseYoutubeResponse(text: string): {
-  transcript: string;
-  title: string;
-  description: string;
-} {
+function parseYoutubeResponse(text: string): Partial<GenerateResponse> {
   // Default values in case parsing fails
-  let result = {
+  const result: Partial<GenerateResponse> = {
     transcript: "",
     title: "",
     description: "",
@@ -224,36 +299,34 @@ function parseYoutubeResponse(text: string): {
 
   // Extract transcript
   const transcriptMatch = text.match(/TRANSCRIPT:\s*([\s\S]*?)(?=TITLE:|$)/);
-  if (transcriptMatch && transcriptMatch[1]) {
+  if (transcriptMatch?.[1]) {
     result.transcript = transcriptMatch[1].trim();
   }
 
   // Extract title
   const titleMatch = text.match(/TITLE:\s*([\s\S]*?)(?=DESCRIPTION:|$)/);
-  if (titleMatch && titleMatch[1]) {
+  if (titleMatch?.[1]) {
     result.title = titleMatch[1].trim();
   }
 
   // Extract description
   const descriptionMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?=$)/);
-  if (descriptionMatch && descriptionMatch[1]) {
+  if (descriptionMatch?.[1]) {
     result.description = descriptionMatch[1].trim();
   }
 
   return result;
 }
 
-function parseLinkedinResponse(text: string): {
-  linkedinPost: string;
-} {
+function parseLinkedinResponse(text: string): Partial<GenerateResponse> {
   // Default values in case parsing fails
-  let result = {
+  const result: Partial<GenerateResponse> = {
     linkedinPost: "",
   };
 
   // Extract LinkedIn post
   const linkedinMatch = text.match(/LINKEDIN POST:\s*([\s\S]*?)(?=$)/);
-  if (linkedinMatch && linkedinMatch[1]) {
+  if (linkedinMatch?.[1]) {
     result.linkedinPost = linkedinMatch[1].trim();
   }
 
