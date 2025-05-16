@@ -268,6 +268,12 @@ Deine Aufgabe ist es, einen professionellen und ansprechenden LinkedIn-Post auf 
 - Anrede: "Demo" nur erwähnen, wenn es um Barrierefreies Webdesign oder Refactoring geht
 - Abschluss: Eine sehr gute und motivierende Frage stellen, die dazu einlädt zu antworten und Leser als Experten wertschätzt
 
+Kontext-spezifische Beispiele:
+- Bei AI-Themen: Erwähne relevante AI-Tools wie ChatGPT, Gemini, Claude oder AI Studio
+- Bei PHP-Themen: Erwähne PHP-spezifische Tools wie PHPUnit, PHPStan, RectorPHP oder Composer
+- Bei JavaScript-Themen: Erwähne JS-Tools wie Node.js, npm, Vitest oder TypeScript
+- WICHTIG: Verwende NUR die Tools/Technologien, die inhaltlich zum Hauptthema passen - keine Vermischung!
+
 Nicht zu verwendende Wörter:
 - Revolution (und ähnliche übertriebene Begriffe)
 
