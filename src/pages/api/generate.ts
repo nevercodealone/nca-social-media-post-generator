@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 // Type definitions
 interface GenerateRequest {
   transcript: string;
-  type?: "youtube" | "linkedin" | "twitter" | "keywords";
+  type?: "youtube" | "linkedin" | "twitter" | "instagram" | "keywords";
   videoDuration?: string;
   keywords?: string[];
 }
@@ -17,6 +17,7 @@ interface GenerateResponse {
   timestamps?: string;
   linkedinPost?: string;
   twitterPost?: string;
+  instagramPost?: string;
   keywords?: string[];
   transcriptCleaned: boolean;
   modelUsed: string;
@@ -70,10 +71,10 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // Validate type
-    if (type !== "youtube" && type !== "linkedin" && type !== "twitter" && type !== "keywords") {
+    if (type !== "youtube" && type !== "linkedin" && type !== "twitter" && type !== "instagram" && type !== "keywords") {
       return new Response(
         JSON.stringify({
-          error: "Ungültiger Typ. Erlaubt sind: youtube, linkedin, twitter, keywords",
+          error: "Ungültiger Typ. Erlaubt sind: youtube, linkedin, twitter, instagram, keywords",
         }),
         {
           status: 400,
@@ -99,6 +100,8 @@ export const POST: APIRoute = async ({ request }) => {
       prompt = createLinkedinPrompt(transcript, keywords);
     } else if (type === "twitter") {
       prompt = createTwitterPrompt(transcript);
+    } else if (type === "instagram") {
+      prompt = createInstagramPrompt(transcript);
     } else if (type === "keywords") {
       prompt = createKeywordsPrompt(transcript);
     } else {
@@ -144,7 +147,7 @@ export const POST: APIRoute = async ({ request }) => {
             ],
           });
           
-          text = message.content[0].text;
+          text = (message.content[0] as any).text;
           modelUsed = model;
           break;
         } catch (error: any) {
@@ -182,6 +185,8 @@ export const POST: APIRoute = async ({ request }) => {
       parsedResponse = parseLinkedinResponse(text!);
     } else if (type === "twitter") {
       parsedResponse = parseTwitterResponse(text!);
+    } else if (type === "instagram") {
+      parsedResponse = parseInstagramResponse(text!);
     } else if (type === "keywords") {
       parsedResponse = parseKeywordsResponse(text!);
     } else {
@@ -372,6 +377,47 @@ TWITTER POST:
 [Der komplette Twitter-Post auf Deutsch, maximal 280 Zeichen mit Hashtags]`;
 }
 
+function createInstagramPrompt(transcript: string): string {
+  const base = createPromptBase(transcript);
+  return `Du bist ein Instagram-Content-Optimierungsassistent für Developer-Content. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden Instagram-Post umwandeln möchte.
+
+${base}
+
+Deine Aufgabe ist es, einen professionellen und ansprechenden Instagram-Post auf Deutsch zu erstellen, der folgende Spezifikationen erfüllt:
+
+- Zielgruppe: Developer-Community und Tech-Enthusiasten auf Instagram
+- Tone of Voice: Visuell ansprechend, informativ aber zugänglich, community-orientiert
+- Format: Instagram-Carousel oder Single Post optimiert
+- Stil: Persönlich, inspirierend, lehrreich
+
+Inhaltliche Anforderungen:
+- Nutze eine direkte, persönliche Ansprache mit einer Geschichte oder einem Aha-Moment
+- Verwende kurze Absätze für bessere mobile Lesbarkeit
+- Stelle eine These oder teile Erfahrungen, die sich aus dem Transkript ergeben
+- Fordere zur Interaktion auf ("Was ist eure Erfahrung?", "Kennt ihr das auch?")
+- Verwende Formulierungen wie "Heute möchte ich mit euch teilen...", "Wer kennt das Problem..."
+
+Kontext-spezifische Beispiele:
+- Bei AI-Themen: Erwähne relevante AI-Tools wie ChatGPT, Gemini, Claude
+- Bei PHP-Themen: Erwähne PHP-spezifische Tools wie PHPUnit, PHPStan, RectorPHP
+- Bei JavaScript-Themen: Erwähne JS-Tools wie Node.js, TypeScript, Vitest
+- WICHTIG: Verwende NUR die Tools/Technologien, die inhaltlich zum Hauptthema passen
+
+Formatierung und Hashtags:
+- Instagram-Post sollte zwischen 500-800 Zeichen lang sein
+- Verwende Absätze zur besseren Lesbarkeit auf mobilen Geräten
+- KEINE Emojis verwenden - halte es professionell
+- Füge am Ende GENAU 10 relevante Hashtags hinzu
+- Die ersten 3 Hashtags MÜSSEN IMMER sein: #nevercodealone #duisburg #ncatestify
+- Die anderen 7 Hashtags sollen themenspezifisch und relevant für den Developer-Content sein
+- Verwende beliebte Instagram-Developer-Hashtags wie #coding #webdev #programming #tech #developer #softwareentwicklung #javascript #php etc.
+
+Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "INSTAGRAM POST", aber der Inhalt soll komplett auf Deutsch sein):
+
+INSTAGRAM POST:
+[Der komplette Instagram-Post auf Deutsch mit Absätzen und genau 10 Hashtags]`;
+}
+
 function createKeywordsPrompt(transcript: string): string {
   return `Du bist ein AI-Assistent für SEO-Keyword-Extraktion. Analysiere das folgende Transkript und extrahiere die 3 wichtigsten Keywords für YouTube-Tags.
 
@@ -458,6 +504,21 @@ function parseTwitterResponse(text: string): Partial<GenerateResponse> {
   const twitterMatch = text.match(/TWITTER POST:\s*([\s\S]*?)(?=$)/);
   if (twitterMatch?.[1]) {
     result.twitterPost = twitterMatch[1].trim();
+  }
+
+  return result;
+}
+
+function parseInstagramResponse(text: string): Partial<GenerateResponse> {
+  // Default values in case parsing fails
+  const result: Partial<GenerateResponse> = {
+    instagramPost: "",
+  };
+
+  // Extract Instagram post
+  const instagramMatch = text.match(/INSTAGRAM POST:\s*([\s\S]*?)(?=$)/);
+  if (instagramMatch?.[1]) {
+    result.instagramPost = instagramMatch[1].trim();
   }
 
   return result;
