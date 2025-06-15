@@ -256,12 +256,24 @@ Deine Aufgabe ist es:
 4. SEO-optimierte Zeitstempel mit Topics generieren (GENAU 5 Zeitstempel basierend auf der Video-Dauer: ${videoDuration})` : ''}
 
 Für den Titel:
-- Stelle eine kontroverse These auf oder provoziere eine Diskussion (Beispiel: "PHP ist 2024 immer noch die beste Wahl für...")
-- Nutze Formulierungen wie "Meine Meinung zu...", "Warum ich denke, dass...", "3 Gründe warum..."
-- Hohe Lesbarkeit steht an erster Stelle! Verwende KEINE Sonderzeichen wie (), &, #, ! oder ähnliches
-- Setze auf präzise Fachbegriffe statt übertriebene Adjektive (sofern im Transkript vorhanden)
-- WICHTIG: Verwende die Priorität-Keywords prominent im Titel, besonders am Anfang
-- Idealerweise 60-70 Zeichen (nicht zu kurz!)
+- WICHTIGSTE REGEL: Keywords MÜSSEN am Anfang stehen für optimale Suchbarkeit
+- VERBOTEN: "Meine Meinung zu..." - diese Formulierung NIEMALS verwenden!
+- Wähle EINE der folgenden bewährten YouTube-Titel-Formeln basierend auf dem Transkriptinhalt:
+  * "[Hauptkeyword] 2025: Die überraschende Wahrheit"
+  * "5 [Hauptkeyword] Fehler die jeder macht"  
+  * "Warum [Hauptkeyword] besser ist als du denkst"
+  * "[Hauptkeyword] Tutorial: Das musst du wissen"
+  * "Der größte [Hauptkeyword] Mythos aufgedeckt"
+  * "[Hauptkeyword] in 2025: Das hat sich geändert"
+  * "So meisterst du [Hauptkeyword] in 3 Schritten"
+  * "[Keyword A] vs [Keyword B]: Der ehrliche Vergleich"
+  * "[Hauptkeyword]: Diese 3 Tricks musst du kennen"
+  * "Darum scheitern 90% bei [Hauptkeyword]"
+  * "[Hauptkeyword] erklärt in 60 Sekunden"
+  * "Was niemand über [Hauptkeyword] sagt"
+- Verwende IMMER Zahlen wenn möglich (2025, Top 5, 3 Tricks, 90%, etc.)
+- KEINE Sonderzeichen wie (), &, #, ! - nur Buchstaben, Zahlen und Doppelpunkt
+- Ziel: 60-70 Zeichen für optimale YouTube-Anzeige
 
 Für die Beschreibung:
 - WICHTIG: Die Zielgruppe sind Entwickler und die Developer-Community! Verwende eine technikaffine Sprache! ABER: Der Inhalt MUSS sich strikt auf das Transkript beziehen!
