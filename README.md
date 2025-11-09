@@ -41,11 +41,15 @@ The application is specifically designed for the developer community and uses in
    ```
 
 3. Configure API keys:
-   - Create a `.env` file in the root directory
-   - Add your API keys:
+   - Create a `.env` file with your API keys:
      ```
-     GOOGLE_GEMINI_API_KEY=your-gemini-api-key
-     ANTHROPIC_API_KEY=your-anthropic-api-key
+     GOOGLE_GEMINI_API_KEY=your-key-here
+     ANTHROPIC_API_KEY=your-key-here
+     ```
+   - Optional: Customize AI models (comma-separated, tries in order):
+     ```
+     GOOGLE_GEMINI_MODELS=gemini-2.5-pro,gemini-2.5-flash
+     ANTHROPIC_MODELS=claude-3-haiku-20240307,claude-3-sonnet-20240229
      ```
    - To obtain an Anthropic API key:
      1. Visit [Anthropic's website](https://console.anthropic.com/)
