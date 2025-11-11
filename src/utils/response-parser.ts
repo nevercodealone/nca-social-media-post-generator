@@ -130,4 +130,30 @@ export class ResponseParser {
 
     return result;
   }
+
+  // Instance methods for tests
+  parseYouTubeResponse(text: string): Partial<GenerateResponse> {
+    return ResponseParser.parseResponse("youtube", text);
+  }
+
+  parseLinkedInResponse(text: string): Partial<GenerateResponse> {
+    return ResponseParser.parseResponse("linkedin", text);
+  }
+
+  parseTwitterResponse(text: string): Partial<GenerateResponse> {
+    return ResponseParser.parseResponse("twitter", text);
+  }
+
+  parseInstagramResponse(text: string): Partial<GenerateResponse> {
+    return ResponseParser.parseResponse("instagram", text);
+  }
+
+  parseTikTokResponse(text: string): Partial<GenerateResponse> {
+    return ResponseParser.parseResponse("tiktok", text);
+  }
+
+  parseKeywordsResponse(text: string): string[] {
+    const result = ResponseParser.parseResponse("keywords", text);
+    return result.keywords || [];
+  }
 }

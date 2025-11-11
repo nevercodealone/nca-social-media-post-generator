@@ -1,4 +1,5 @@
 import type { APIContext } from "astro";
+import { vi } from "vitest";
 
 /**
  * Creates mock Astro request for testing
@@ -36,7 +37,7 @@ export function createMockContext(request: Request): APIContext {
     site: undefined,
     generator: "Astro v4.0.0",
     clientAddress: "127.0.0.1",
-  } as APIContext;
+  } as unknown as APIContext;
 }
 
 /**

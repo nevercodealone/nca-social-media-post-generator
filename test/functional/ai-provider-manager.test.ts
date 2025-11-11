@@ -8,7 +8,6 @@ import { AI_MODELS } from "../../src/config/constants.js";
 import {
   mockGeminiGenerate,
   mockClaudeCreate,
-  setupSuccessfulMocks,
   setupGeminiFailure,
   setupAllProvidersFail,
   resetAllMocks,

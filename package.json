@@ -18,6 +18,7 @@
     "test:coverage:html": "vitest run --coverage --reporter=html",
     "test:coverage:full": "vitest run --coverage --coverage.reporter=html --coverage.reporter=text --coverage.reportsDirectory=coverage",
     "test:ui": "vitest --ui",
+    "type-check": "tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

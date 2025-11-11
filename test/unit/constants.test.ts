@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { SocialMediaPlatform } from "../../src/types/index.js";
 import {
   VALIDATION_LIMITS,
   CHARACTER_LIMITS,
@@ -28,7 +29,14 @@ describe("Constants Configuration", () => {
 
   describe("PLATFORM_CONFIGS", () => {
     it("should have configurations for all platforms", () => {
-      const platforms = ["youtube", "linkedin", "twitter", "instagram", "tiktok", "keywords"];
+      const platforms: SocialMediaPlatform[] = [
+        "youtube",
+        "linkedin",
+        "twitter",
+        "instagram",
+        "tiktok",
+        "keywords",
+      ];
 
       platforms.forEach((platform) => {
         expect(PLATFORM_CONFIGS[platform]).toBeDefined();

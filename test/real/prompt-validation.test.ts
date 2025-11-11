@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { AIProviderManager } from "../../src/utils/ai-providers.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
 import { sampleTranscripts } from "../utils/fixtures.js";
@@ -10,7 +10,7 @@ describe.skipIf(!hasApiKeys)("Real Prompt Validation", () => {
   let manager: AIProviderManager;
   let promptFactory: PromptFactory;
 
-  test.beforeAll(() => {
+  beforeAll(() => {
     manager = new AIProviderManager(
       import.meta.env.GOOGLE_GEMINI_API_KEY,
       import.meta.env.ANTHROPIC_API_KEY

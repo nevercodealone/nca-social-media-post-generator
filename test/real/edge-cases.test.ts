@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { AIProviderManager } from "../../src/utils/ai-providers.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
 import { ResponseParser } from "../../src/utils/response-parser.js";
@@ -10,7 +10,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
   let promptFactory: PromptFactory;
   let parser: ResponseParser;
 
-  test.beforeAll(() => {
+  beforeAll(() => {
     manager = new AIProviderManager(
       import.meta.env.GOOGLE_GEMINI_API_KEY,
       import.meta.env.ANTHROPIC_API_KEY
@@ -31,9 +31,9 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       // Parse should succeed despite emojis
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.length).toBeGreaterThan(50);
     }, 30000);
 
     it("should handle quotes and special punctuation", async () => {
@@ -48,7 +48,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
       // Should contain professional content about innovation
-      expect(parsed.description.toLowerCase()).toMatch(/innovation|development|explore/);
+      expect(parsed.description!.toLowerCase()).toMatch(/innovation|development|explore/);
     }, 30000);
 
     it("should handle non-English characters", async () => {
@@ -61,10 +61,10 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
 
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
       // Should mention JavaScript or TypeScript
-      expect(parsed.description.toLowerCase()).toMatch(/javascript|typescript/);
+      expect(parsed.description!.toLowerCase()).toMatch(/javascript|typescript/);
     }, 30000);
 
     it("should handle mixed language content", async () => {
@@ -80,7 +80,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
       // Should be about JavaScript performance
-      expect(parsed.description.toLowerCase()).toMatch(
+      expect(parsed.description!.toLowerCase()).toMatch(
         /javascript|performance|optimization|development/
       );
     }, 30000);
@@ -98,12 +98,12 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       const parsed = parser.parseYouTubeResponse(result.text);
       // Even with short input, should generate meaningful content
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
-      expect(parsed.title.length).toBeLessThan(150);
+      expect(parsed.title!.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeLessThan(150);
       expect(parsed.description).toBeDefined();
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.length).toBeGreaterThan(50);
       // Should mention JavaScript
-      expect(parsed.description.toLowerCase()).toContain("javascript");
+      expect(parsed.description!.toLowerCase()).toContain("javascript");
     }, 30000);
 
     it("should handle transcript at character limit", async () => {
@@ -122,9 +122,9 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
       // Should still generate concise, useful content even from long input
-      expect(parsed.title.length).toBeLessThan(150);
-      expect(parsed.description.length).toBeGreaterThan(100);
-      expect(parsed.description.toLowerCase()).toMatch(/development|technology|programming/);
+      expect(parsed.title!.length).toBeLessThan(150);
+      expect(parsed.description!.length).toBeGreaterThan(100);
+      expect(parsed.description!.toLowerCase()).toMatch(/development|technology|programming/);
     }, 60000);
   });
 
@@ -140,10 +140,10 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
 
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
       // Should preserve technical concepts
-      expect(parsed.description.toLowerCase()).toMatch(/typescript|pattern|solid|programming/);
+      expect(parsed.description!.toLowerCase()).toMatch(/typescript|pattern|solid|programming/);
     }, 30000);
 
     it("should handle conversational casual content", async () => {
@@ -158,9 +158,9 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.length).toBeGreaterThan(50);
       // Should generate professional content even from casual input
-      expect(parsed.description.toLowerCase()).toContain("coding");
+      expect(parsed.description!.toLowerCase()).toContain("coding");
     }, 30000);
 
     it("should handle content with numbers and data", async () => {
@@ -176,9 +176,9 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
       // Should mention the frameworks or statistics
-      expect(parsed.description.toLowerCase()).toMatch(/javascript|react|vue/);
+      expect(parsed.description!.toLowerCase()).toMatch(/javascript|react|vue/);
       // Title should be professional despite data-heavy input
-      expect(parsed.title.length).toBeLessThan(150);
+      expect(parsed.title!.length).toBeLessThan(150);
     }, 30000);
 
     it("should handle content with URLs and links", async () => {
@@ -192,15 +192,15 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
 
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
       // Should generate content about resources/development
-      expect(parsed.description.toLowerCase()).toMatch(
+      expect(parsed.description!.toLowerCase()).toMatch(
         /javascript|development|code|github|stackoverflow|resource/
       );
       // URLs should not break parsing
       expect(parsed.title).not.toContain("http");
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.length).toBeGreaterThan(50);
     }, 30000);
   });
 
@@ -255,12 +255,12 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       const parsed = parser.parseYouTubeResponse(result.text);
       expect(parsed).toBeDefined();
       expect(parsed.title).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(10);
+      expect(parsed.title!.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.length).toBeGreaterThan(50);
       // Should add proper punctuation and structure
       expect(parsed.description).toMatch(/[.!?]/);
-      expect(parsed.description.toLowerCase()).toMatch(/javascript|development|web/);
+      expect(parsed.description!.toLowerCase()).toMatch(/javascript|development|web/);
     }, 30000);
 
     it("should handle transcript with excessive whitespace", async () => {
@@ -276,8 +276,8 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.description).toBeDefined();
       // Should generate clean content despite messy input
       expect(parsed.title).not.toMatch(/\s{2,}/); // No double spaces
-      expect(parsed.description.toLowerCase()).toContain("javascript");
-      expect(parsed.description.length).toBeGreaterThan(50);
+      expect(parsed.description!.toLowerCase()).toContain("javascript");
+      expect(parsed.description!.length).toBeGreaterThan(50);
     }, 30000);
   });
 });

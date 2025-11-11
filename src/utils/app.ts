@@ -1,5 +1,5 @@
 import type { SocialMediaPlatform } from "../types/index.js";
-import { VALIDATION_LIMITS, UI_MESSAGES, ERROR_MESSAGES } from "../config/constants.js";
+import { UI_MESSAGES, ERROR_MESSAGES } from "../config/constants.js";
 import { validateTranscript, validateVideoDuration } from "./validation.js";
 import { generateContent, detectKeywords, ApiError } from "./api.js";
 import { KeywordManager } from "./keywords.js";
@@ -17,15 +17,15 @@ import {
 export class SocialMediaApp {
   private keywordManager: KeywordManager;
   private platformManager: PlatformManager;
-  private sharedTranscript: HTMLTextAreaElement;
-  private detectKeywordsBtn: HTMLButtonElement;
-  private clearKeywordsBtn: HTMLButtonElement;
-  private setKeywordsBtn: HTMLButtonElement;
-  private keywordInput: HTMLInputElement;
-  private stepKeywords: HTMLElement;
-  private stepSocial: HTMLElement;
-  private errorDiv: HTMLElement;
-  private errorMessage: HTMLElement;
+  private sharedTranscript!: HTMLTextAreaElement;
+  private detectKeywordsBtn!: HTMLButtonElement;
+  private clearKeywordsBtn!: HTMLButtonElement;
+  private setKeywordsBtn!: HTMLButtonElement;
+  private keywordInput!: HTMLInputElement;
+  private stepKeywords!: HTMLElement;
+  private stepSocial!: HTMLElement;
+  private errorDiv!: HTMLElement;
+  private errorMessage!: HTMLElement;
 
   constructor() {
     this.keywordManager = new KeywordManager();

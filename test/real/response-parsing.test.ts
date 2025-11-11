@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { AIProviderManager } from "../../src/utils/ai-providers.js";
 import { ResponseParser } from "../../src/utils/response-parser.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
@@ -11,7 +11,7 @@ describe.skipIf(!hasApiKeys)("Real Response Parsing", () => {
   let parser: ResponseParser;
   let promptFactory: PromptFactory;
 
-  test.beforeAll(() => {
+  beforeAll(() => {
     manager = new AIProviderManager(
       import.meta.env.GOOGLE_GEMINI_API_KEY,
       import.meta.env.ANTHROPIC_API_KEY
@@ -30,8 +30,8 @@ describe.skipIf(!hasApiKeys)("Real Response Parsing", () => {
       expect(parsed).toBeDefined();
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
-      expect(parsed.title.length).toBeGreaterThan(0);
-      expect(parsed.description.length).toBeGreaterThan(0);
+      expect(parsed.title!.length).toBeGreaterThan(0);
+      expect(parsed.description!.length).toBeGreaterThan(0);
     }, 30000);
 
     it("should handle transcript section if present", async () => {
@@ -71,9 +71,10 @@ describe.skipIf(!hasApiKeys)("Real Response Parsing", () => {
       const parsed = parser.parseLinkedInResponse(result.text);
 
       expect(parsed).toBeDefined();
-      expect(typeof parsed).toBe("string");
-      expect(parsed.length).toBeGreaterThan(50);
-      expect(parsed.length).toBeLessThanOrEqual(3000);
+      expect(parsed.linkedinPost).toBeDefined();
+      expect(typeof parsed.linkedinPost).toBe("string");
+      expect(parsed.linkedinPost!.length).toBeGreaterThan(50);
+      expect(parsed.linkedinPost!.length).toBeLessThanOrEqual(3000);
     }, 30000);
   });
 
@@ -85,8 +86,9 @@ describe.skipIf(!hasApiKeys)("Real Response Parsing", () => {
       const parsed = parser.parseInstagramResponse(result.text);
 
       expect(parsed).toBeDefined();
-      expect(typeof parsed).toBe("string");
-      expect(parsed.length).toBeLessThanOrEqual(2200);
+      expect(parsed.instagramPost).toBeDefined();
+      expect(typeof parsed.instagramPost).toBe("string");
+      expect(parsed.instagramPost!.length).toBeLessThanOrEqual(2200);
     }, 30000);
   });
 

@@ -33,4 +33,29 @@ export class PromptFactory {
         throw new Error(`Unsupported platform type: ${type}`);
     }
   }
+
+  // Convenience methods for tests
+  createYouTubePrompt(transcript: string, videoDuration?: string, keywords?: string[]): string {
+    return PromptFactory.createPrompt("youtube", transcript, { videoDuration, keywords });
+  }
+
+  createLinkedInPrompt(transcript: string, keywords?: string[]): string {
+    return PromptFactory.createPrompt("linkedin", transcript, { keywords });
+  }
+
+  createTwitterPrompt(transcript: string): string {
+    return PromptFactory.createPrompt("twitter", transcript);
+  }
+
+  createInstagramPrompt(transcript: string): string {
+    return PromptFactory.createPrompt("instagram", transcript);
+  }
+
+  createTikTokPrompt(transcript: string, keywords?: string[]): string {
+    return PromptFactory.createPrompt("tiktok", transcript, { keywords });
+  }
+
+  createKeywordsPrompt(transcript: string): string {
+    return PromptFactory.createPrompt("keywords", transcript);
+  }
 }

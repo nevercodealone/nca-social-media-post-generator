@@ -1,4 +1,4 @@
-import { describe, it, expect, test } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import { GoogleGeminiProvider, AnthropicProvider } from "../../src/utils/ai-providers.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
 import { sampleTranscripts } from "../utils/fixtures.js";
@@ -12,7 +12,7 @@ describe.skipIf(!hasBothKeys)("Model Comparison", () => {
   let anthropicProvider: AnthropicProvider;
   let promptFactory: PromptFactory;
 
-  test.beforeAll(() => {
+  beforeAll(() => {
     googleProvider = new GoogleGeminiProvider(import.meta.env.GOOGLE_GEMINI_API_KEY);
     anthropicProvider = new AnthropicProvider(import.meta.env.ANTHROPIC_API_KEY);
     promptFactory = new PromptFactory();
