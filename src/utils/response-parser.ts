@@ -1,19 +1,19 @@
-import type { SocialMediaPlatform, GenerateResponse } from '../types/index.js';
+import type { SocialMediaPlatform, GenerateResponse } from "../types/index.js";
 
 export class ResponseParser {
   static parseResponse(type: SocialMediaPlatform, text: string): Partial<GenerateResponse> {
     switch (type) {
-      case 'youtube':
+      case "youtube":
         return this.parseYoutubeResponse(text);
-      case 'linkedin':
+      case "linkedin":
         return this.parseLinkedinResponse(text);
-      case 'twitter':
+      case "twitter":
         return this.parseTwitterResponse(text);
-      case 'instagram':
+      case "instagram":
         return this.parseInstagramResponse(text);
-      case 'tiktok':
+      case "tiktok":
         return this.parseTiktokResponse(text);
-      case 'keywords':
+      case "keywords":
         return this.parseKeywordsResponse(text);
       default:
         throw new Error(`Unsupported platform type: ${type}`);
@@ -22,9 +22,9 @@ export class ResponseParser {
 
   private static parseYoutubeResponse(text: string): Partial<GenerateResponse> {
     const result: Partial<GenerateResponse> = {
-      transcript: '',
-      title: '',
-      description: '',
+      transcript: "",
+      title: "",
+      description: "",
     };
 
     // Extract transcript
@@ -56,7 +56,7 @@ export class ResponseParser {
 
   private static parseLinkedinResponse(text: string): Partial<GenerateResponse> {
     const result: Partial<GenerateResponse> = {
-      linkedinPost: '',
+      linkedinPost: "",
     };
 
     // Extract LinkedIn post
@@ -70,7 +70,7 @@ export class ResponseParser {
 
   private static parseTwitterResponse(text: string): Partial<GenerateResponse> {
     const result: Partial<GenerateResponse> = {
-      twitterPost: '',
+      twitterPost: "",
     };
 
     // Extract Twitter post
@@ -84,7 +84,7 @@ export class ResponseParser {
 
   private static parseInstagramResponse(text: string): Partial<GenerateResponse> {
     const result: Partial<GenerateResponse> = {
-      instagramPost: '',
+      instagramPost: "",
     };
 
     // Extract Instagram post
@@ -98,7 +98,7 @@ export class ResponseParser {
 
   private static parseTiktokResponse(text: string): Partial<GenerateResponse> {
     const result: Partial<GenerateResponse> = {
-      tiktokPost: '',
+      tiktokPost: "",
     };
 
     // Extract TikTok post
@@ -120,7 +120,7 @@ export class ResponseParser {
     if (keywordsMatch?.[1]) {
       const keywordsText = keywordsMatch[1].trim();
       const keywords = keywordsText
-        .split('\n')
+        .split("\n")
         .map((line) => line.trim())
         .filter((line) => line.length > 0)
         .slice(0, 3); // Ensure max 3 keywords

@@ -1,8 +1,8 @@
-import type { AIError } from '../types/index.js';
+import type { AIError } from "../types/index.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
-import { AI_MODELS } from '../config/constants.js';
-import { sanitizeApiKey } from './validation.js';
+import { AI_MODELS } from "../config/constants.js";
+import { sanitizeApiKey } from "./validation.js";
 
 export interface AIProvider {
   readonly name: string;
@@ -11,7 +11,7 @@ export interface AIProvider {
 }
 
 export class GoogleGeminiProvider implements AIProvider {
-  readonly name = 'Google Gemini';
+  readonly name = "Google Gemini";
   readonly models = AI_MODELS.google;
   private genAI: GoogleGenerativeAI;
 
@@ -28,24 +28,24 @@ export class GoogleGeminiProvider implements AIProvider {
         const result = await genModel.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-        
+
         return { text, model };
       } catch (error: any) {
         errors.push({
           provider: this.name,
-          message: error.message || 'Unbekannter Fehler',
+          message: error.message || "Unbekannter Fehler",
           status: error.status,
         });
         console.error(`Fehler mit ${model}:`, error.message);
       }
     }
 
-    throw new Error(`${this.name} failed: ${errors.map(e => e.message).join(', ')}`);
+    throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
   }
 }
 
 export class AnthropicProvider implements AIProvider {
-  readonly name = 'Anthropic Claude';
+  readonly name = "Anthropic Claude";
   readonly models = AI_MODELS.anthropic;
   private anthropic: Anthropic;
 
@@ -63,7 +63,7 @@ export class AnthropicProvider implements AIProvider {
           max_tokens: 4000,
           messages: [
             {
-              role: 'user',
+              role: "user",
               content: prompt,
             },
           ],
@@ -74,14 +74,14 @@ export class AnthropicProvider implements AIProvider {
       } catch (error: any) {
         errors.push({
           provider: this.name,
-          message: error.message || 'Unbekannter Fehler',
+          message: error.message || "Unbekannter Fehler",
           status: error.status,
         });
         console.error(`Fehler mit ${model}:`, error.message);
       }
     }
 
-    throw new Error(`${this.name} failed: ${errors.map(e => e.message).join(', ')}`);
+    throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
   }
 }
 
@@ -89,20 +89,17 @@ export class AIProviderManager {
   private providers: AIProvider[] = [];
   private errors: AIError[] = [];
 
-  constructor(
-    googleApiKey?: string,
-    anthropicApiKey?: string
-  ) {
+  constructor(googleApiKey?: string, anthropicApiKey?: string) {
     if (googleApiKey) {
       this.providers.push(new GoogleGeminiProvider(googleApiKey));
     }
-    
+
     if (anthropicApiKey) {
       this.providers.push(new AnthropicProvider(anthropicApiKey));
     }
 
     if (this.providers.length === 0) {
-      throw new Error('No API keys provided for AI providers');
+      throw new Error("No API keys provided for AI providers");
     }
   }
 
@@ -116,17 +113,15 @@ export class AIProviderManager {
       } catch (error: any) {
         this.errors.push({
           provider: provider.name,
-          message: error.message || 'Unbekannter Fehler',
+          message: error.message || "Unbekannter Fehler",
         });
         console.error(`Provider ${provider.name} failed:`, error.message);
       }
     }
 
     // If all providers failed
-    const errorMessage = this.errors
-      .map((e) => `${e.provider}: ${e.message}`)
-      .join(', ');
-    
+    const errorMessage = this.errors.map((e) => `${e.provider}: ${e.message}`).join(", ");
+
     throw new Error(`All AI providers failed: ${errorMessage}`);
   }
 

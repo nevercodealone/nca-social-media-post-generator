@@ -4,19 +4,19 @@ export const VALIDATION_LIMITS = {
 };
 
 export const ERROR_MESSAGES = {
-  INVALID_TRANSCRIPT: 'Bitte gib ein gültiges Transkript ein.',
-  INVALID_DURATION: 'Bitte gib die Video-Dauer im Format MM:SS ein (z.B. 7:16).',
-  GENERATION_FAILED: 'Ein Fehler ist beim Generieren des Inhalts aufgetreten.',
-  COPY_FAILED: 'Text konnte nicht kopiert werden.',
-  KEYWORD_DETECTION_FAILED: 'Fehler beim Erkennen der Keywords: ',
-  NETWORK_ERROR: 'Netzwerkfehler. Bitte versuche es erneut.',
+  INVALID_TRANSCRIPT: "Bitte gib ein gültiges Transkript ein.",
+  INVALID_DURATION: "Bitte gib die Video-Dauer im Format MM:SS ein (z.B. 7:16).",
+  GENERATION_FAILED: "Ein Fehler ist beim Generieren des Inhalts aufgetreten.",
+  COPY_FAILED: "Text konnte nicht kopiert werden.",
+  KEYWORD_DETECTION_FAILED: "Fehler beim Erkennen der Keywords: ",
+  NETWORK_ERROR: "Netzwerkfehler. Bitte versuche es erneut.",
 };
 
 export const UI_MESSAGES = {
-  DETECTING_KEYWORDS: 'Erkennt...',
-  DETECT_KEYWORDS: 'Keywords automatisch erkennen',
-  COPIED: 'Kopiert!',
-  ANALYZING: 'Transkript wird analysiert und Content generiert...',
+  DETECTING_KEYWORDS: "Erkennt...",
+  DETECT_KEYWORDS: "Keywords automatisch erkennen",
+  COPIED: "Kopiert!",
+  ANALYZING: "Transkript wird analysiert und Content generiert...",
 };
 
 export const PLATFORM_CONFIGS = {
@@ -27,8 +27,8 @@ export const PLATFORM_CONFIGS = {
     result: "yt-result",
     color: {
       primary: "red-600",
-      secondary: "red-700"
-    }
+      secondary: "red-700",
+    },
   },
   linkedin: {
     name: "LinkedIn",
@@ -37,8 +37,8 @@ export const PLATFORM_CONFIGS = {
     result: "li-result",
     color: {
       primary: "blue-600",
-      secondary: "blue-700"
-    }
+      secondary: "blue-700",
+    },
   },
   twitter: {
     name: "Twitter",
@@ -47,8 +47,8 @@ export const PLATFORM_CONFIGS = {
     result: "tw-result",
     color: {
       primary: "black",
-      secondary: "gray-800"
-    }
+      secondary: "gray-800",
+    },
   },
   instagram: {
     name: "Instagram",
@@ -57,8 +57,8 @@ export const PLATFORM_CONFIGS = {
     result: "ig-result",
     color: {
       primary: "pink-500",
-      secondary: "pink-600"
-    }
+      secondary: "pink-600",
+    },
   },
   tiktok: {
     name: "TikTok",
@@ -67,8 +67,8 @@ export const PLATFORM_CONFIGS = {
     result: "tt-result",
     color: {
       primary: "black",
-      secondary: "gray-800"
-    }
+      secondary: "gray-800",
+    },
   },
   keywords: {
     name: "Keywords",
@@ -77,7 +77,7 @@ export const PLATFORM_CONFIGS = {
     result: "",
     color: {
       primary: "indigo-600",
-      secondary: "indigo-700"
-    }
-  }
+      secondary: "indigo-700",
+    },
+  },
 };

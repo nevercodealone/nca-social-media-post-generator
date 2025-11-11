@@ -30,12 +30,14 @@ The application is specifically designed for the developer community and uses in
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd social-media-post-generator
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
@@ -57,7 +59,6 @@ The application is specifically designed for the developer community and uses in
      3. Navigate to the API keys section
      4. Create a new API key
      5. Copy the key and add it to your `.env` file
-   
    - To obtain a Google Gemini API key:
      1. Visit [Google AI Studio](https://makersuite.google.com/)
      2. Sign up or log in with your Google account

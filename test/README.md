@@ -22,16 +22,19 @@ npm run test:all           # Run everything
 ## Test Tiers
 
 **Unit** (`test/unit/`)
+
 - Single functions only
 - Mock everything
 - Fast (< 100ms)
 
 **Functional** (`test/functional/`)
+
 - Complete workflows
 - Mock AI SDKs only
 - Test failover logic
 
 **Real** (`test/real/`)
+
 - No mocking
 - Validate prompt quality
 - See `test/real/README.md`

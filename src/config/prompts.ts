@@ -1,17 +1,18 @@
 export const GLOBAL_PROMPT_HELPERS = {
   BRAND_NAMES: `Achte auf die richtige Schreibweise dieser Marken und Begriffe: Never Code Alone (nicht nevercodealone, never code alone oder NeverCodeAlone), Roland Golla (nicht Roland Goler oder andere Varianten), roland@nevercodealone.de (nicht Roland@codealone.de oder andere Varianten), Pimcore (nicht PimCore oder pimcore), TYPO3 (nicht Typo3 oder typo3), CypressIO (nicht Cypress.io oder cypress), JavaScript (nicht Javascript oder javascript), ChatGPT (nicht Chat-GPT oder chatgpt), OpenAI (nicht Open AI oder openai), React (nicht ReactJS oder react), Node.js (nicht NodeJS oder nodejs), Vue.js (nicht VueJS oder vuejs), TypeScript (nicht Typescript oder typescript), PHP (nicht php, Php, prp oder PRP), PHPUnit (nicht PhpUnit oder phpunit), PHPStan (nicht Phpstan oder php-stan), RectorPHP (nicht Rector oder rector-php), Vitest (nicht vitest oder vi-test), Make.com (nicht Make, Make.io oder make.com), Claude 4 (nicht Claude4 oder claude 4), Claude 3.7 (nicht Claude37 oder claude 3.7), Vibe Coding (nicht vibe coding oder VibeCoding), GitHub (nicht Github oder github), Docker (nicht docker), Kubernetes (nicht kubernetes), AWS (nicht aws), PostgreSQL (nicht postgres oder postgresql), Astro (nicht astro), Anthropic (nicht anthropic), Google Gemini (nicht google gemini oder Gemini), VS Code (nicht vscode oder VSCode), Laravel (nicht laravel), Symfony (nicht Symphony oder symfony), Next.js (nicht NextJS oder nextjs), WordPress (nicht wordpress oder Wordpress).`,
-  
+
   AVOID_EXAGGERATION: `KEINE übertriebenen Wörter wie "ultimativ", "revolutionär", "Revolution", "revolutionieren", "unglaublich" - halte es sachlich und präzise.`,
-  
+
   INFORMAL_ADDRESS: `Verwende eine informelle Anrede ("ihr/euch/eure" statt "Sie/Ihnen") und einen lockeren, direkten Ton.`,
 } as const;
 
 export const PLATFORM_PROMPTS = {
   youtube: {
     base: (transcript: string, videoDuration?: string, keywords?: string[]) => {
-      const keywordsPrompt = keywords && keywords.length > 0
-        ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(', ')}`
-        : '';
+      const keywordsPrompt =
+        keywords && keywords.length > 0
+          ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(", ")}`
+          : "";
 
       return `Du bist ein YouTube-Content-Optimierungsassistent für Entwickler-Content im Jahr 2025. Wichtiger Hinweis: Es handelt sich um YouTube SHORTS, NICHT um lange Videos.
 
@@ -31,7 +32,7 @@ Deine Aufgabe ist es:
         videoDuration
           ? `
 4. SEO-optimierte Zeitstempel mit Topics generieren (GENAU 5 Zeitstempel basierend auf der Video-Dauer: ${videoDuration})`
-          : ''
+          : ""
       }
 
 Für den Titel:
@@ -104,7 +105,7 @@ Für die Zeitstempel (nur wenn Video-Dauer angegeben: ${videoDuration}):
 - Topics sollen als Sprungmarken fungieren und Nutzer zum Klicken animieren
 - Verwende Keywords aus dem Transkript in den Topic-Namen
 - Beispiel: "0:00 Warum PHP 2024 relevant bleibt", "2:15 Moderne PHP-Features im Einsatz"`
-          : ''
+          : ""
       }
 
 Bitte formatiere deine Antwort wie folgt (benutze weiterhin die englischen Abschnittsbezeichnungen, aber der Inhalt soll auf Deutsch sein):
@@ -122,16 +123,17 @@ DESCRIPTION:
 
 TIMESTAMPS:
 [5 SEO-optimierte Zeitstempel mit Topics, gleichmäßig über ${videoDuration} verteilt]`
-          : ''
+          : ""
       }`;
-    }
+    },
   },
 
   linkedin: {
     base: (transcript: string, keywords?: string[]) => {
-      const keywordsPrompt = keywords && keywords.length > 0
-        ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(', ')}`
-        : '';
+      const keywordsPrompt =
+        keywords && keywords.length > 0
+          ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(", ")}`
+          : "";
 
       return `Du bist ein LinkedIn-Content-Optimierungsassistent im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen überzeugenden LinkedIn-Post umwandeln möchte.
 
@@ -172,11 +174,13 @@ Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "LIN
 
 LINKEDIN POST:
 [Der komplette LinkedIn-Post auf Deutsch mit Absätzen und Hashtags]`;
-    }
+    },
   },
 
   twitter: {
-    base: (transcript: string) => `Du bist ein Twitter-Content-Optimierungsassistent für Entwickler-Content im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden Twitter-Post umwandeln möchte.
+    base: (
+      transcript: string
+    ) => `Du bist ein Twitter-Content-Optimierungsassistent für Entwickler-Content im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden Twitter-Post umwandeln möchte.
 
 ${GLOBAL_PROMPT_HELPERS.BRAND_NAMES}
 
@@ -215,11 +219,13 @@ Formatierung:
 Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "TWITTER POST", aber der Inhalt soll komplett auf Deutsch sein):
 
 TWITTER POST:
-[Der komplette Twitter-Post auf Deutsch, maximal 280 Zeichen mit Hashtags]`
+[Der komplette Twitter-Post auf Deutsch, maximal 280 Zeichen mit Hashtags]`,
   },
 
   instagram: {
-    base: (transcript: string) => `Du bist ein Instagram-Content-Optimierungsassistent für Developer-Content im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden Instagram-Post umwandeln möchte.
+    base: (
+      transcript: string
+    ) => `Du bist ein Instagram-Content-Optimierungsassistent für Developer-Content im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden Instagram-Post umwandeln möchte.
 
 ${GLOBAL_PROMPT_HELPERS.BRAND_NAMES}
 
@@ -262,14 +268,15 @@ Formatierung und Hashtags:
 Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "INSTAGRAM POST", aber der Inhalt soll komplett auf Deutsch sein):
 
 INSTAGRAM POST:
-[Der komplette Instagram-Post auf Deutsch mit Absätzen und genau 10 Hashtags]`
+[Der komplette Instagram-Post auf Deutsch mit Absätzen und genau 10 Hashtags]`,
   },
 
   tiktok: {
     base: (transcript: string, keywords?: string[]) => {
-      const keywordsPrompt = keywords && keywords.length > 0
-        ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(', ')}`
-        : '';
+      const keywordsPrompt =
+        keywords && keywords.length > 0
+          ? `\n\nPRIORITÄT-KEYWORDS: Diese Keywords sollen priorisiert und prominent verwendet werden: ${keywords.join(", ")}`
+          : "";
 
       return `Du bist ein TikTok-Content-Optimierungsassistent für Developer-Content im Jahr 2025. Ich stelle dir ein Transkript zur Verfügung, das ich in einen ansprechenden TikTok-Post umwandeln möchte.
 
@@ -321,11 +328,13 @@ Bitte formatiere deine Antwort wie folgt (benutze die englische Bezeichnung "TIK
 
 TIKTOK POST:
 [Der komplette TikTok-Post auf Deutsch mit Zeilenumbrüchen und 3-6 Hashtags]`;
-    }
+    },
   },
 
   keywords: {
-    base: (transcript: string) => `Du bist ein AI-Assistent für SEO-Keyword-Extraktion. Analysiere das folgende Transkript und extrahiere die 3 wichtigsten Keywords für YouTube-Tags.
+    base: (
+      transcript: string
+    ) => `Du bist ein AI-Assistent für SEO-Keyword-Extraktion. Analysiere das folgende Transkript und extrahiere die 3 wichtigsten Keywords für YouTube-Tags.
 
 ${GLOBAL_PROMPT_HELPERS.BRAND_NAMES}
 
@@ -352,6 +361,6 @@ Gib die Keywords in folgendem Format zurück:
 KEYWORDS:
 keyword1
 keyword2
-keyword3`
-  }
+keyword3`,
+  },
 } as const;

@@ -1,4 +1,4 @@
-import type { APIContext } from 'astro';
+import type { APIContext } from "astro";
 
 /**
  * Creates mock Astro request for testing
@@ -9,14 +9,14 @@ export function createMockRequest(overrides?: {
   youtubeUrl?: string;
 }): Request {
   const body = {
-    platform: overrides?.platform || 'youtube',
-    transcript: overrides?.transcript || 'Sample transcript for testing',
+    platform: overrides?.platform || "youtube",
+    transcript: overrides?.transcript || "Sample transcript for testing",
     youtubeUrl: overrides?.youtubeUrl,
   };
 
-  return new Request('http://localhost:4321/api/generate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  return new Request("http://localhost:4321/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
@@ -34,8 +34,8 @@ export function createMockContext(request: Request): APIContext {
     locals: {},
     cookies: {} as any,
     site: undefined,
-    generator: 'Astro v4.0.0',
-    clientAddress: '127.0.0.1',
+    generator: "Astro v4.0.0",
+    clientAddress: "127.0.0.1",
   } as APIContext;
 }
 
@@ -44,9 +44,21 @@ export function createMockContext(request: Request): APIContext {
  */
 export function createMockTranscript(length: number): string {
   const words = [
-    'innovation', 'technology', 'digital', 'transformation', 'strategy',
-    'solution', 'business', 'enterprise', 'platform', 'development',
-    'customer', 'experience', 'analytics', 'cloud', 'security',
+    "innovation",
+    "technology",
+    "digital",
+    "transformation",
+    "strategy",
+    "solution",
+    "business",
+    "enterprise",
+    "platform",
+    "development",
+    "customer",
+    "experience",
+    "analytics",
+    "cloud",
+    "security",
   ];
 
   const result: string[] = [];
@@ -58,7 +70,7 @@ export function createMockTranscript(length: number): string {
     currentLength += word.length + 1; // +1 for space
   }
 
-  return result.join(' ').substring(0, length);
+  return result.join(" ").substring(0, length);
 }
 
 /**
@@ -68,7 +80,7 @@ export function createMockAIResponse(platform: string, content?: string): any {
   const defaultContent = content || `Sample ${platform} post content`;
 
   // Gemini response format
-  if (platform === 'gemini') {
+  if (platform === "gemini") {
     return {
       response: {
         text: () => defaultContent,
@@ -78,6 +90,6 @@ export function createMockAIResponse(platform: string, content?: string): any {
 
   // Claude response format
   return {
-    content: [{ type: 'text', text: defaultContent }],
+    content: [{ type: "text", text: defaultContent }],
   };
 }

@@ -3,9 +3,7 @@ import { AIProviderManager } from "../../src/utils/ai-providers.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
 import { ResponseParser } from "../../src/utils/response-parser.js";
 
-const hasApiKeys =
-  !!import.meta.env.GOOGLE_GEMINI_API_KEY ||
-  !!import.meta.env.ANTHROPIC_API_KEY;
+const hasApiKeys = !!import.meta.env.GOOGLE_GEMINI_API_KEY || !!import.meta.env.ANTHROPIC_API_KEY;
 
 describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
   let manager: AIProviderManager;
@@ -23,8 +21,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
 
   describe("Special characters and encoding", () => {
     it("should handle emojis in transcript", async () => {
-      const transcript =
-        "This is about web development 🚀 and innovation 💡 in tech 🖥️";
+      const transcript = "This is about web development 🚀 and innovation 💡 in tech 🖥️";
       const prompt = promptFactory.createYouTubePrompt(transcript);
       const result = await manager.generateContent(prompt);
 
@@ -40,8 +37,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
     }, 30000);
 
     it("should handle quotes and special punctuation", async () => {
-      const transcript =
-        'He said: "Innovation is key." But what does that mean? Let\'s explore!';
+      const transcript = 'He said: "Innovation is key." But what does that mean? Let\'s explore!';
       const prompt = promptFactory.createYouTubePrompt(transcript);
       const result = await manager.generateContent(prompt);
 
@@ -52,14 +48,11 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title).toBeDefined();
       expect(parsed.description).toBeDefined();
       // Should contain professional content about innovation
-      expect(parsed.description.toLowerCase()).toMatch(
-        /innovation|development|explore/
-      );
+      expect(parsed.description.toLowerCase()).toMatch(/innovation|development|explore/);
     }, 30000);
 
     it("should handle non-English characters", async () => {
-      const transcript =
-        "Über die Entwicklung von JavaScript und TypeScript für große Anwendungen";
+      const transcript = "Über die Entwicklung von JavaScript und TypeScript für große Anwendungen";
       const prompt = promptFactory.createYouTubePrompt(transcript);
       const result = await manager.generateContent(prompt);
 
@@ -131,9 +124,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       // Should still generate concise, useful content even from long input
       expect(parsed.title.length).toBeLessThan(150);
       expect(parsed.description.length).toBeGreaterThan(100);
-      expect(parsed.description.toLowerCase()).toMatch(
-        /development|technology|programming/
-      );
+      expect(parsed.description.toLowerCase()).toMatch(/development|technology|programming/);
     }, 60000);
   });
 
@@ -152,9 +143,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.title.length).toBeGreaterThan(10);
       expect(parsed.description).toBeDefined();
       // Should preserve technical concepts
-      expect(parsed.description.toLowerCase()).toMatch(
-        /typescript|pattern|solid|programming/
-      );
+      expect(parsed.description.toLowerCase()).toMatch(/typescript|pattern|solid|programming/);
     }, 30000);
 
     it("should handle conversational casual content", async () => {
@@ -234,8 +223,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
     }, 30000);
 
     it("should handle Instagram with emoji-heavy content", async () => {
-      const transcript =
-        "Web development is amazing with modern tools and frameworks";
+      const transcript = "Web development is amazing with modern tools and frameworks";
       const prompt = promptFactory.createInstagramPrompt(transcript);
       const result = await manager.generateContent(prompt);
 
@@ -243,9 +231,7 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(result.text.length).toBeLessThanOrEqual(2200);
       expect(result.text.length).toBeGreaterThan(100);
       // Instagram content should be engaging
-      expect(result.text.toLowerCase()).toMatch(
-        /web|development|tools|frameworks/
-      );
+      expect(result.text.toLowerCase()).toMatch(/web|development|tools|frameworks/);
       // Should have hashtags
       expect(result.text).toMatch(/#\w+/);
       // Count hashtags - Instagram typically has multiple
@@ -274,14 +260,11 @@ describe.skipIf(!hasApiKeys)("Edge Cases with Real AI", () => {
       expect(parsed.description.length).toBeGreaterThan(50);
       // Should add proper punctuation and structure
       expect(parsed.description).toMatch(/[.!?]/);
-      expect(parsed.description.toLowerCase()).toMatch(
-        /javascript|development|web/
-      );
+      expect(parsed.description.toLowerCase()).toMatch(/javascript|development|web/);
     }, 30000);
 
     it("should handle transcript with excessive whitespace", async () => {
-      const transcript =
-        "   JavaScript     development   with    lots     of     spaces   ";
+      const transcript = "   JavaScript     development   with    lots     of     spaces   ";
       const prompt = promptFactory.createYouTubePrompt(transcript);
       const result = await manager.generateContent(prompt);
 

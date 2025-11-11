@@ -7,10 +7,12 @@ Tests that make actual API calls to validate prompts and AI behavior.
 ### 1. Get API Keys
 
 **Google Gemini:**
+
 - Visit: https://aistudio.google.com/app/apikey
 - Create API key
 
 **Anthropic Claude:**
+
 - Visit: https://console.anthropic.com/
 - Create API key
 
@@ -22,6 +24,7 @@ export ANTHROPIC_API_KEY="your-key-here"
 ```
 
 Or create `.env`:
+
 ```
 GOOGLE_GEMINI_API_KEY=your-key-here
 ANTHROPIC_API_KEY=your-key-here
@@ -57,15 +60,18 @@ GOOGLE_GEMINI_API_KEY=xxx ANTHROPIC_API_KEY=yyy npm run test:real
 ## Troubleshooting
 
 **Tests skipped:**
+
 - Check API keys are set
 - Keys should not have quotes or extra spaces
 
 **Tests timeout:**
+
 - Increase timeout in test file
 - Check network connection
 - Verify API service status
 
 **API errors:**
+
 - Check API key validity
 - Verify account has credits
 - Check rate limits

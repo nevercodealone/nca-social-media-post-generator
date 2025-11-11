@@ -1,5 +1,5 @@
-import { VALIDATION_LIMITS } from './types.js';
-import { getElement, createKeywordTag, clearContainer, setTextContent } from './utils.js';
+import { VALIDATION_LIMITS } from "./types.js";
+import { getElement, createKeywordTag, clearContainer, setTextContent } from "./utils.js";
 
 export class KeywordManager {
   constructor() {
@@ -7,12 +7,12 @@ export class KeywordManager {
       keywords: [],
       maxKeywords: VALIDATION_LIMITS.MAX_KEYWORDS,
       detected: false,
-      set: false
+      set: false,
     };
 
-    this.keywordsList = getElement('keywords-list');
-    this.keywordCount = getElement('keyword-count');
-    this.setKeywordsBtn = getElement('set-keywords-btn');
+    this.keywordsList = getElement("keywords-list");
+    this.keywordCount = getElement("keyword-count");
+    this.setKeywordsBtn = getElement("set-keywords-btn");
   }
 
   getKeywords() {
@@ -31,10 +31,14 @@ export class KeywordManager {
 
   addKeyword(keyword) {
     const trimmed = keyword.trim().toLowerCase();
-    if (!trimmed || this.state.keywords.includes(trimmed) || this.state.keywords.length >= this.state.maxKeywords) {
+    if (
+      !trimmed ||
+      this.state.keywords.includes(trimmed) ||
+      this.state.keywords.length >= this.state.maxKeywords
+    ) {
       return false;
     }
-    
+
     this.state.keywords.push(trimmed);
     this.render();
     return true;
@@ -68,12 +72,12 @@ export class KeywordManager {
 
   render() {
     clearContainer(this.keywordsList);
-    
+
     this.state.keywords.forEach((keyword, index) => {
       const tag = createKeywordTag(keyword, index, (idx) => this.removeKeyword(idx));
       this.keywordsList.appendChild(tag);
     });
-    
+
     this.updateKeywordCount();
     this.updateSetKeywordsButton();
   }

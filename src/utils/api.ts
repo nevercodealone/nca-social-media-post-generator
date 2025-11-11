@@ -1,5 +1,5 @@
-import type { GenerateRequest, GenerateResponse, SocialMediaPlatform } from '../types/index.js';
-import { ERROR_MESSAGES } from '../config/constants.js';
+import type { GenerateRequest, GenerateResponse, SocialMediaPlatform } from "../types/index.js";
+import { ERROR_MESSAGES } from "../config/constants.js";
 
 export class ApiError extends Error {
   constructor(
@@ -8,7 +8,7 @@ export class ApiError extends Error {
     public details?: string
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -23,14 +23,14 @@ export async function generateContent(
   const requestData: GenerateRequest = {
     transcript,
     type,
-    ...options
+    ...options,
   };
 
   try {
-    const response = await fetch('/api/generate', {
-      method: 'POST',
+    const response = await fetch("/api/generate", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(requestData),
     });
@@ -50,25 +50,24 @@ export async function generateContent(
     if (error instanceof ApiError) {
       throw error;
     }
-    
-    if (error instanceof TypeError && error.message.includes('fetch')) {
+
+    if (error instanceof TypeError && error.message.includes("fetch")) {
       throw new ApiError(ERROR_MESSAGES.NETWORK_ERROR);
     }
-    
-    throw new ApiError(
-      error instanceof Error ? error.message : ERROR_MESSAGES.GENERATION_FAILED
-    );
+
+    throw new ApiError(error instanceof Error ? error.message : ERROR_MESSAGES.GENERATION_FAILED);
   }
 }
 
 export async function detectKeywords(transcript: string): Promise<string[]> {
   try {
-    const response = await generateContent(transcript, 'keywords');
+    const response = await generateContent(transcript, "keywords");
     return response.keywords || [];
   } catch (error) {
-    const message = error instanceof ApiError 
-      ? ERROR_MESSAGES.KEYWORD_DETECTION_FAILED + error.message
-      : ERROR_MESSAGES.KEYWORD_DETECTION_FAILED + 'Unbekannter Fehler';
+    const message =
+      error instanceof ApiError
+        ? ERROR_MESSAGES.KEYWORD_DETECTION_FAILED + error.message
+        : ERROR_MESSAGES.KEYWORD_DETECTION_FAILED + "Unbekannter Fehler";
     throw new ApiError(message);
   }
 }

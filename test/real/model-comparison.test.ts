@@ -1,13 +1,13 @@
-import { describe, it, expect, test } from 'vitest';
-import { GoogleGeminiProvider, AnthropicProvider } from '../../src/utils/ai-providers.js';
-import { PromptFactory } from '../../src/utils/prompt-factory.js';
-import { sampleTranscripts } from '../utils/fixtures.js';
+import { describe, it, expect, test } from "vitest";
+import { GoogleGeminiProvider, AnthropicProvider } from "../../src/utils/ai-providers.js";
+import { PromptFactory } from "../../src/utils/prompt-factory.js";
+import { sampleTranscripts } from "../utils/fixtures.js";
 
 const hasGoogleKey = !!import.meta.env.GOOGLE_GEMINI_API_KEY;
 const hasAnthropicKey = !!import.meta.env.ANTHROPIC_API_KEY;
 const hasBothKeys = hasGoogleKey && hasAnthropicKey;
 
-describe.skipIf(!hasBothKeys)('Model Comparison', () => {
+describe.skipIf(!hasBothKeys)("Model Comparison", () => {
   let googleProvider: GoogleGeminiProvider;
   let anthropicProvider: AnthropicProvider;
   let promptFactory: PromptFactory;
@@ -18,8 +18,8 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
     promptFactory = new PromptFactory();
   });
 
-  describe('YouTube content generation comparison', () => {
-    it('should generate content from both providers', async () => {
+  describe("YouTube content generation comparison", () => {
+    it("should generate content from both providers", async () => {
       const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.medium);
 
       const googleResult = await googleProvider.generateContent(prompt);
@@ -31,13 +31,13 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
       expect(googleResult.text.length).toBeGreaterThan(50);
       expect(anthropicResult.text.length).toBeGreaterThan(50);
 
-      console.log('\n=== GOOGLE GEMINI RESPONSE ===');
+      console.log("\n=== GOOGLE GEMINI RESPONSE ===");
       console.log(googleResult.text.substring(0, 200));
-      console.log('\n=== ANTHROPIC CLAUDE RESPONSE ===');
+      console.log("\n=== ANTHROPIC CLAUDE RESPONSE ===");
       console.log(anthropicResult.text.substring(0, 200));
     }, 60000);
 
-    it('should compare response lengths', async () => {
+    it("should compare response lengths", async () => {
       const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.medium);
 
       const googleResult = await googleProvider.generateContent(prompt);
@@ -56,8 +56,8 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
     }, 60000);
   });
 
-  describe('Keywords extraction comparison', () => {
-    it('should extract keywords from both providers', async () => {
+  describe("Keywords extraction comparison", () => {
+    it("should extract keywords from both providers", async () => {
       const prompt = promptFactory.createKeywordsPrompt(sampleTranscripts.medium);
 
       const googleResult = await googleProvider.generateContent(prompt);
@@ -66,15 +66,15 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
       expect(googleResult.text).toBeDefined();
       expect(anthropicResult.text).toBeDefined();
 
-      console.log('\n=== GOOGLE KEYWORDS ===');
+      console.log("\n=== GOOGLE KEYWORDS ===");
       console.log(googleResult.text);
-      console.log('\n=== CLAUDE KEYWORDS ===');
+      console.log("\n=== CLAUDE KEYWORDS ===");
       console.log(anthropicResult.text);
     }, 60000);
   });
 
-  describe('Response time comparison', () => {
-    it('should measure response times for both providers', async () => {
+  describe("Response time comparison", () => {
+    it("should measure response times for both providers", async () => {
       const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.short);
 
       const googleStart = Date.now();
@@ -97,8 +97,8 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
     }, 60000);
   });
 
-  describe('Consistency comparison', () => {
-    it('should generate consistent quality from same provider', async () => {
+  describe("Consistency comparison", () => {
+    it("should generate consistent quality from same provider", async () => {
       const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.short);
 
       const result1 = await googleProvider.generateContent(prompt);
@@ -126,8 +126,8 @@ describe.skipIf(!hasBothKeys)('Model Comparison', () => {
   });
 });
 
-describe.skipIf(!hasGoogleKey)('Google Gemini Only', () => {
-  it('should test Google when only Google key available', async () => {
+describe.skipIf(!hasGoogleKey)("Google Gemini Only", () => {
+  it("should test Google when only Google key available", async () => {
     const provider = new GoogleGeminiProvider(import.meta.env.GOOGLE_GEMINI_API_KEY);
     const promptFactory = new PromptFactory();
     const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.short);
@@ -137,8 +137,8 @@ describe.skipIf(!hasGoogleKey)('Google Gemini Only', () => {
   }, 30000);
 });
 
-describe.skipIf(!hasAnthropicKey)('Anthropic Claude Only', () => {
-  it('should test Claude when only Anthropic key available', async () => {
+describe.skipIf(!hasAnthropicKey)("Anthropic Claude Only", () => {
+  it("should test Claude when only Anthropic key available", async () => {
     const provider = new AnthropicProvider(import.meta.env.ANTHROPIC_API_KEY);
     const promptFactory = new PromptFactory();
     const prompt = promptFactory.createYouTubePrompt(sampleTranscripts.short);

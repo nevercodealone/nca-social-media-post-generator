@@ -1,4 +1,4 @@
-import { expect } from 'vitest';
+import { expect } from "vitest";
 
 /**
  * Custom assertion helpers for domain-specific validations
@@ -35,7 +35,7 @@ export function assertValidYouTubePost(content: string) {
   // Should have hashtags
   assertHasHashtags(content);
   // Within character limit
-  assertWithinCharacterLimit(content, 'youtube');
+  assertWithinCharacterLimit(content, "youtube");
 }
 
 /**
@@ -47,7 +47,7 @@ export function assertValidLinkedInPost(content: string) {
   // Should have hashtags
   assertHasHashtags(content);
   // Within character limit
-  assertWithinCharacterLimit(content, 'linkedin');
+  assertWithinCharacterLimit(content, "linkedin");
 }
 
 /**
@@ -64,7 +64,7 @@ export function assertHasBrandElements(content: string) {
 export function assertValidGeminiResponse(response: any) {
   expect(response).toBeDefined();
   expect(response.response).toBeDefined();
-  expect(typeof response.response.text).toBe('function');
+  expect(typeof response.response.text).toBe("function");
 }
 
 /**
@@ -74,6 +74,6 @@ export function assertValidClaudeResponse(response: any) {
   expect(response).toBeDefined();
   expect(response.content).toBeDefined();
   expect(Array.isArray(response.content)).toBe(true);
-  expect(response.content[0].type).toBe('text');
+  expect(response.content[0].type).toBe("text");
   expect(response.content[0].text).toBeDefined();
 }

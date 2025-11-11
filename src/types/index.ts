@@ -1,4 +1,10 @@
-export type SocialMediaPlatform = "youtube" | "linkedin" | "twitter" | "instagram" | "tiktok" | "keywords";
+export type SocialMediaPlatform =
+  | "youtube"
+  | "linkedin"
+  | "twitter"
+  | "instagram"
+  | "tiktok"
+  | "keywords";
 
 export interface GenerateRequest {
   transcript: string;

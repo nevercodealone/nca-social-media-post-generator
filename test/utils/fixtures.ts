@@ -2,7 +2,7 @@
  * Sample transcripts for testing
  */
 export const sampleTranscripts = {
-  short: 'This is a short transcript about digital transformation.',
+  short: "This is a short transcript about digital transformation.",
 
   medium: `
     Welcome to our podcast about digital innovation. Today we're discussing
@@ -109,9 +109,9 @@ export const expectedParsedContent = {
  * Invalid input scenarios
  */
 export const invalidInputs = {
-  emptyTranscript: '',
-  tooShort: 'too short',
-  missingPlatform: { transcript: 'valid transcript' },
-  invalidPlatform: { platform: 'invalid', transcript: 'valid transcript' },
-  tooLong: 'a'.repeat(50001),
+  emptyTranscript: "",
+  tooShort: "too short",
+  missingPlatform: { transcript: "valid transcript" },
+  invalidPlatform: { platform: "invalid", transcript: "valid transcript" },
+  tooLong: "a".repeat(50001),
 };

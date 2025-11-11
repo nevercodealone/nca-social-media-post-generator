@@ -1,13 +1,13 @@
-import type { KeywordState } from '../types/index.js';
-import { VALIDATION_LIMITS } from '../config/constants.js';
-import { getElement, createKeywordTag, clearContainer, setTextContent } from './dom.js';
+import type { KeywordState } from "../types/index.js";
+import { VALIDATION_LIMITS } from "../config/constants.js";
+import { getElement, createKeywordTag, clearContainer, setTextContent } from "./dom.js";
 
 export class KeywordManager {
   private state: KeywordState = {
     keywords: [],
     maxKeywords: VALIDATION_LIMITS.MAX_KEYWORDS,
     detected: false,
-    set: false
+    set: false,
   };
 
   private keywordsList: HTMLElement;
@@ -15,9 +15,9 @@ export class KeywordManager {
   private setKeywordsBtn: HTMLButtonElement;
 
   constructor() {
-    this.keywordsList = getElement('keywords-list');
-    this.keywordCount = getElement('keyword-count');
-    this.setKeywordsBtn = getElement<HTMLButtonElement>('set-keywords-btn');
+    this.keywordsList = getElement("keywords-list");
+    this.keywordCount = getElement("keyword-count");
+    this.setKeywordsBtn = getElement<HTMLButtonElement>("set-keywords-btn");
   }
 
   getKeywords(): string[] {
@@ -36,10 +36,14 @@ export class KeywordManager {
 
   addKeyword(keyword: string): boolean {
     const trimmed = keyword.trim().toLowerCase();
-    if (!trimmed || this.state.keywords.includes(trimmed) || this.state.keywords.length >= this.state.maxKeywords) {
+    if (
+      !trimmed ||
+      this.state.keywords.includes(trimmed) ||
+      this.state.keywords.length >= this.state.maxKeywords
+    ) {
       return false;
     }
-    
+
     this.state.keywords.push(trimmed);
     this.render();
     return true;
@@ -73,12 +77,12 @@ export class KeywordManager {
 
   private render(): void {
     clearContainer(this.keywordsList);
-    
+
     this.state.keywords.forEach((keyword, index) => {
       const tag = createKeywordTag(keyword, index, (idx) => this.removeKeyword(idx));
       this.keywordsList.appendChild(tag);
     });
-    
+
     this.updateKeywordCount();
     this.updateSetKeywordsButton();
   }

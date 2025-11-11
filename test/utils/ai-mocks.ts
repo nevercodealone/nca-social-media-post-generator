@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 /**
  * Mock functions for AI providers
@@ -34,12 +34,12 @@ export const mockClaudeProvider = () => ({
 export function setupSuccessfulMocks() {
   mockGeminiGenerate.mockResolvedValue({
     response: {
-      text: () => 'Mock Gemini response',
+      text: () => "Mock Gemini response",
     },
   });
 
   mockClaudeCreate.mockResolvedValue({
-    content: [{ type: 'text', text: 'Mock Claude response' }],
+    content: [{ type: "text", text: "Mock Claude response" }],
   });
 }
 
@@ -47,10 +47,10 @@ export function setupSuccessfulMocks() {
  * Setup Gemini failure, Claude success (for failover testing)
  */
 export function setupGeminiFailure() {
-  mockGeminiGenerate.mockRejectedValue(new Error('Gemini API error'));
+  mockGeminiGenerate.mockRejectedValue(new Error("Gemini API error"));
 
   mockClaudeCreate.mockResolvedValue({
-    content: [{ type: 'text', text: 'Mock Claude response' }],
+    content: [{ type: "text", text: "Mock Claude response" }],
   });
 }
 
@@ -58,8 +58,8 @@ export function setupGeminiFailure() {
  * Setup all providers to fail (for error testing)
  */
 export function setupAllProvidersFail() {
-  mockGeminiGenerate.mockRejectedValue(new Error('Gemini API error'));
-  mockClaudeCreate.mockRejectedValue(new Error('Claude API error'));
+  mockGeminiGenerate.mockRejectedValue(new Error("Gemini API error"));
+  mockClaudeCreate.mockRejectedValue(new Error("Claude API error"));
 }
 
 /**

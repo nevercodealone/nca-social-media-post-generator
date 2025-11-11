@@ -14,7 +14,7 @@ let aiProviderManager: AIProviderManager;
 try {
   aiProviderManager = new AIProviderManager(GOOGLE_GEMINI_API_KEY, ANTHROPIC_API_KEY);
 } catch (error) {
-  console.error('Failed to initialize AI providers:', error);
+  console.error("Failed to initialize AI providers:", error);
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -29,7 +29,7 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Parse and validate request
     const body = await parseAndValidateRequest(request);
-    if ('error' in body) {
+    if ("error" in body) {
       return body.error;
     }
 
@@ -70,12 +70,8 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error: any) {
     console.error("Unerwarteter Fehler:", error);
 
-    if (error.message?.includes('All AI providers failed')) {
-      return createErrorResponse(
-        "Inhaltsgenerierung fehlgeschlagen",
-        503,
-        error.message
-      );
+    if (error.message?.includes("All AI providers failed")) {
+      return createErrorResponse("Inhaltsgenerierung fehlgeschlagen", 503, error.message);
     }
 
     return createErrorResponse(
@@ -92,10 +88,10 @@ async function parseAndValidateRequest(
   let body: GenerateRequest;
 
   try {
-    body = await request.json() as GenerateRequest;
+    body = (await request.json()) as GenerateRequest;
   } catch {
     return {
-      error: createErrorResponse("Ungültige JSON-Anfrage", 400)
+      error: createErrorResponse("Ungültige JSON-Anfrage", 400),
     };
   }
 
@@ -103,21 +99,23 @@ async function parseAndValidateRequest(
   const transcriptError = validateTranscript(body.transcript);
   if (transcriptError) {
     return {
-      error: createErrorResponse(transcriptError, 400)
+      error: createErrorResponse(transcriptError, 400),
     };
   }
 
   // Validate type
   const validTypes: SocialMediaPlatform[] = [
-    "youtube", "linkedin", "twitter", "instagram", "tiktok", "keywords"
+    "youtube",
+    "linkedin",
+    "twitter",
+    "instagram",
+    "tiktok",
+    "keywords",
   ];
 
   if (body.type && !validTypes.includes(body.type)) {
     return {
-      error: createErrorResponse(
-        "Ungültiger Typ. Erlaubt sind: " + validTypes.join(", "),
-        400
-      )
+      error: createErrorResponse("Ungültiger Typ. Erlaubt sind: " + validTypes.join(", "), 400),
     };
   }
 
@@ -126,7 +124,7 @@ async function parseAndValidateRequest(
     const durationError = validateVideoDuration(body.videoDuration);
     if (durationError) {
       return {
-        error: createErrorResponse(durationError, 400)
+        error: createErrorResponse(durationError, 400),
       };
     }
   }
@@ -145,11 +143,7 @@ function cleanTranscript(transcript: string): { transcript: string; cleaned: boo
   return { transcript, cleaned: false };
 }
 
-function createErrorResponse(
-  message: string,
-  status: number,
-  details?: string
-): Response {
+function createErrorResponse(message: string, status: number, details?: string): Response {
   const errorData: any = { error: message };
   if (details) {
     errorData.details = details;
