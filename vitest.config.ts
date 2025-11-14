@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
         GOOGLE_GEMINI_API_KEY: env.GOOGLE_GEMINI_API_KEY,
         ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
         GOOGLE_GEMINI_MODELS: env.GOOGLE_GEMINI_MODELS || "gemini-2.5-pro,gemini-2.5-flash",
-        ANTHROPIC_MODELS: env.ANTHROPIC_MODELS || "claude-3-haiku-20240307,claude-3-sonnet-20240229",
+        ANTHROPIC_MODELS:
+          env.ANTHROPIC_MODELS || "claude-3-haiku-20240307,claude-3-sonnet-20240229",
       },
       // Use projects for different test configurations
       projects: [

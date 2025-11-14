@@ -29,6 +29,7 @@
    - `test/real/` - Integration tests with real AI APIs
 
 2. **Run only the new test** to verify it fails:
+
    ```bash
    # For real tests
    npm run test:real -- test/real/your-feature.test.ts
@@ -50,6 +51,7 @@
    - Update types in `src/types/` if needed
 
 2. **Run only necessary tests** during development:
+
    ```bash
    # Run only your test file
    npm run test:real -- test/real/your-feature.test.ts
@@ -68,6 +70,7 @@
 ### REFACTOR Phase: Validate Complete
 
 1. **Run full test suite** after implementation:
+
    ```bash
    npm run test:all
    ```
@@ -78,17 +81,21 @@
    - No broken functionality
 
 3. **Format code with Prettier**:
+
    ```bash
    npm run format
    ```
+
    - Ensures consistent code style
    - Automatically fixes formatting issues
    - Must pass before commit
 
 4. **Run static code analysis**:
+
    ```bash
    npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck
    ```
+
    - Checks for TypeScript type errors
    - Detects unused variables/imports
    - Validates type safety
@@ -102,33 +109,39 @@
 ## 3. Key Principles
 
 ### Test Management
+
 - **Never modify existing tests** unless explicitly required by task
 - Existing tests are regression protection
 - Only add new tests for new features
 
 ### Efficient Testing
+
 - **During development**: Run only relevant tests
 - **After completion**: Run full test suite once
 - Avoid unnecessary full test runs (saves time and API costs)
 
 ### Test Structure
+
 - **Unit tests** (`test/unit/`): Fast, isolated, no external dependencies
 - **Functional tests** (`test/functional/`): Workflow validation, mocked AI
 - **Real tests** (`test/real/`): AI prompt validation, actual API calls
 
 ### AI Prompt Testing
+
 - Use **real tests** for prompt validation
 - Test with actual AI providers (Google Gemini, Anthropic Claude)
 - Verify AI output matches expected format and content
 - Include edge cases and brand corrections
 
 ### Code Changes
+
 - Make targeted, minimal changes
 - Update only files directly related to feature
 - Preserve existing functionality
 - Follow existing code patterns
 
 ### Commit Strategy
+
 - Commit after GREEN phase success
 - Include test file in commit
 - Use conventional commit messages
@@ -137,37 +150,44 @@
 ## 4. Code Conventions
 
 ### Code Style
+
 - **Prettier**: All code must be formatted with Prettier
 - **Run before commit**: `npm run format`
 - **Check formatting**: `npm run format:check`
 - **Configuration**: Project uses Prettier with Astro plugin
 
 ### TypeScript Standards
+
 - **Type safety**: No `any` types without justification
 - **Strict mode**: Follow project's strict TypeScript config
 - **Explicit types**: Define interfaces for all data structures
 - **Static analysis**: Run `npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck` before commit
 
 ### Naming Conventions
+
 - **Files**: kebab-case (e.g., `brand-detection.test.ts`)
 - **Functions**: camelCase (e.g., `parseYouTubeResponse`)
 - **Classes**: PascalCase (e.g., `AIProviderManager`)
 - **Constants**: UPPER_SNAKE_CASE (e.g., `BRAND_NAMES`)
 
 ### File Organization
+
 - **Config**: `src/config/` for constants and prompts
 - **Utils**: `src/utils/` for business logic
 - **Types**: `src/types/` for TypeScript definitions
 - **Tests**: Match source structure in `test/{unit,functional,real}/`
 
 ### Import Order
+
 1. External dependencies (npm packages)
 2. Internal types
 3. Internal utilities
 4. Blank line between groups
 
 ### Code Quality Checklist
+
 Before committing, ensure:
+
 - [ ] All tests pass (`npm run test:all`)
 - [ ] Code formatted with Prettier (`npm run format`)
 - [ ] Static analysis passed (`npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck`)
