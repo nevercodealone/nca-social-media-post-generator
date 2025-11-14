@@ -1,5 +1,5 @@
 export const GLOBAL_PROMPT_HELPERS = {
-  BRAND_NAMES: `Achte auf die richtige Schreibweise dieser Marken und Begriffe: Never Code Alone (nicht nevercodealone, never code alone oder NeverCodeAlone), Roland Golla (nicht Roland Goler oder andere Varianten), roland@nevercodealone.de (nicht Roland@codealone.de oder andere Varianten), Pimcore (nicht PimCore oder pimcore), TYPO3 (nicht Typo3 oder typo3), CypressIO (nicht Cypress.io oder cypress), JavaScript (nicht Javascript oder javascript), ChatGPT (nicht Chat-GPT oder chatgpt), OpenAI (nicht Open AI oder openai), React (nicht ReactJS oder react), Node.js (nicht NodeJS oder nodejs), Vue.js (nicht VueJS oder vuejs), TypeScript (nicht Typescript oder typescript), PHP (nicht php, Php, prp oder PRP), PHPUnit (nicht PhpUnit oder phpunit), PHPStan (nicht Phpstan oder php-stan), RectorPHP (nicht Rector oder rector-php), Vitest (nicht vitest oder vi-test), Make.com (nicht Make, Make.io oder make.com), Claude 4 (nicht Claude4 oder claude 4), Claude 3.7 (nicht Claude37 oder claude 3.7), Vibe Coding (nicht vibe coding oder VibeCoding), GitHub (nicht Github oder github), Docker (nicht docker), Kubernetes (nicht kubernetes), AWS (nicht aws), PostgreSQL (nicht postgres oder postgresql), Astro (nicht astro), Anthropic (nicht anthropic), Google Gemini (nicht google gemini oder Gemini), VS Code (nicht vscode oder VSCode), Laravel (nicht laravel), Symfony (nicht Symphony oder symfony), Next.js (nicht NextJS oder nextjs), WordPress (nicht wordpress oder Wordpress).`,
+  BRAND_NAMES: `Achte auf die richtige Schreibweise dieser Marken und Begriffe: Never Code Alone (nicht nevercodealone, never code alone oder NeverCodeAlone), Roland Golla (nicht Roland Goler oder andere Varianten), roland@nevercodealone.de (nicht Roland@codealone.de oder andere Varianten), AI Nights (nicht AI Knights, AI Lights oder andere Varianten), Andreas Pabst (Veranstalter der AI Nights aus Nürnberg), Pimcore (nicht PimCore oder pimcore), TYPO3 (nicht Typo3 oder typo3), CypressIO (nicht Cypress.io oder cypress), JavaScript (nicht Javascript oder javascript), ChatGPT (nicht Chat-GPT oder chatgpt), OpenAI (nicht Open AI oder openai), React (nicht ReactJS oder react), Node.js (nicht NodeJS oder nodejs), Vue.js (nicht VueJS oder vuejs), TypeScript (nicht Typescript oder typescript), PHP (nicht php, Php, prp oder PRP), PHPUnit (nicht PhpUnit oder phpunit), PHPStan (nicht Phpstan oder php-stan), RectorPHP (nicht Rector oder rector-php), Vitest (nicht vitest oder vi-test), Make.com (nicht Make, Make.io oder make.com), Claude 4 (nicht Claude4 oder claude 4), Claude 3.7 (nicht Claude37 oder claude 3.7), Vibe Coding (nicht vibe coding oder VibeCoding), GitHub (nicht Github oder github), Docker (nicht docker), Kubernetes (nicht kubernetes), AWS (nicht aws), PostgreSQL (nicht postgres oder postgresql), Astro (nicht astro), Anthropic (nicht anthropic), Google Gemini (nicht google gemini oder Gemini), VS Code (nicht vscode oder VSCode), Laravel (nicht laravel), Symfony (nicht Symphony oder symfony), Next.js (nicht NextJS oder nextjs), WordPress (nicht wordpress oder Wordpress).`,
 
   AVOID_EXAGGERATION: `KEINE übertriebenen Wörter wie "ultimativ", "revolutionär", "Revolution", "revolutionieren", "unglaublich" - halte es sachlich und präzise.`,
 
@@ -77,6 +77,7 @@ Für die Beschreibung:
 - TOTAL WICHTIG: Jeder Absatz soll etwa 500 Zeichen lang sein! Die gesamte Beschreibung soll ca. 1500 Zeichen umfassen.
 - Die Beschreibung MUSS sehr detailliert und umfangreich sein mit vielen Informationen und Kontext, ABER **AUSSCHLIESSLICH BASIEREND AUF DEM TRANSKRIPTINHALT!** Erfinde nichts!
 - WICHTIG: Integriere die Priorität-Keywords natürlich und prominent in die Beschreibung
+- **KRITISCH: Wenn "AI Nights" im Transkript erwähnt wird, integriere "AI Nights aus Nürnberg von Andreas Pabst" natürlich und organisch in die Beschreibung**
 - Absatz 1: Stelle eine These oder kontroverse Meinung auf, die sich aus dem Transkript ergibt (8-10 Sätze) - WICHTIG: Der ERSTE SATZ muss mit dem Hauptkeyword beginnen und direkt eine Meinung oder These präsentieren!
 - Absatz 2: Führe Argumente und Gegenpositionen aus **die im Short (Transkript) erwähnt werden** (8-10 Sätze) - Formuliere Fragen wie "Was denkt ihr zu..." oder "Habt ihr ähnliche Erfahrungen mit..."
 - Absatz 3: Fordere die Community zur Diskussion auf (8-10 Sätze) - Stelle konkrete Fragen, lade zu Gegenargumenten ein, frage nach eigenen Erfahrungen!
@@ -153,6 +154,7 @@ Deine Aufgabe ist es, einen professionellen und ansprechenden LinkedIn-Post auf 
 - Tone of Voice: Soll klar machen, dass ich viel Spaß an den Themen habe und diese direkt helfen; ich bringe das gerne in Demos und Remote Workshops in Teams
 - Anrede: "Demo" nur erwähnen, wenn es um Barrierefreies Webdesign oder Refactoring geht
 - WICHTIG: Integriere die Priorität-Keywords natürlich und prominent in den Post
+- **KRITISCH: Wenn "AI Nights" im Transkript erwähnt wird, integriere "AI Nights aus Nürnberg von Andreas Pabst" natürlich und organisch in den Post**
 - Abschluss: Eine sehr gute und motivierende Frage stellen, die dazu einlädt zu antworten und Leser als Experten wertschätzt
 
 Kontext-spezifische Beispiele:
@@ -197,6 +199,7 @@ Deine Aufgabe ist es, einen prägnanten und ansprechenden Twitter-Post auf Deuts
 - Tone of Voice: Direkt, meinungsstark und diskussionsfördernd
 - Zeichenlimit: Maximal 280 Zeichen
 - Stil: Prägnant, auf den Punkt, provokativ aber sachlich
+- **KRITISCH: Wenn "AI Nights" im Transkript erwähnt wird, erwähne "AI Nights Nürnberg" im Post (wegen Zeichenlimit verkürzt)**
 
 Inhaltliche Anforderungen:
 - Stelle eine These oder kontroverse Meinung auf, die sich aus dem Transkript ergibt
@@ -242,6 +245,7 @@ Deine Aufgabe ist es, einen professionellen und ansprechenden Instagram-Post auf
 - Tone of Voice: Visuell ansprechend, informativ aber zugänglich, community-orientiert
 - Format: Instagram-Carousel oder Single Post optimiert
 - Stil: Persönlich, inspirierend, lehrreich
+- **KRITISCH: Wenn "AI Nights" im Transkript erwähnt wird, integriere "AI Nights aus Nürnberg von Andreas Pabst" natürlich und organisch in den Post**
 
 Inhaltliche Anforderungen:
 - Nutze eine direkte, persönliche Ansprache mit einer Geschichte oder einem Aha-Moment
@@ -295,6 +299,7 @@ Deine Aufgabe ist es, einen optimierten TikTok-Post auf Deutsch zu erstellen, de
 - Tone of Voice: Direkt, trendy, lehrreich aber unterhaltsam
 - Zeichenlimit: Optimal 150-300 Zeichen für maximale Engagement (maximal 2200 Zeichen verfügbar)
 - Stil: Hook-basiert, problemlösungsorientiert, visuell beschreibend
+- **KRITISCH: Wenn "AI Nights" im Transkript erwähnt wird, integriere "AI Nights aus Nürnberg von Andreas Pabst" natürlich und organisch in den Post**
 
 Inhaltliche Anforderungen:
 - WICHTIGSTER PUNKT: Starte mit einem starken Hook in den ersten 10-15 Wörtern
