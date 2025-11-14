@@ -85,7 +85,16 @@
    - Automatically fixes formatting issues
    - Must pass before commit
 
-4. **Clean up if needed**:
+4. **Run static code analysis**:
+   ```bash
+   npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck
+   ```
+   - Checks for TypeScript type errors
+   - Detects unused variables/imports
+   - Validates type safety
+   - Must pass before commit
+
+5. **Clean up if needed**:
    - Remove debug code
    - Improve code clarity
    - Update comments
@@ -137,7 +146,7 @@
 - **Type safety**: No `any` types without justification
 - **Strict mode**: Follow project's strict TypeScript config
 - **Explicit types**: Define interfaces for all data structures
-- **Type checking**: Run `npm run type-check` before commit
+- **Static analysis**: Run `npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck` before commit
 
 ### Naming Conventions
 - **Files**: kebab-case (e.g., `brand-detection.test.ts`)
@@ -161,7 +170,7 @@
 Before committing, ensure:
 - [ ] All tests pass (`npm run test:all`)
 - [ ] Code formatted with Prettier (`npm run format`)
-- [ ] No TypeScript errors (`npm run type-check`)
+- [ ] Static analysis passed (`npx tsc --noEmit --noUnusedLocals --allowImportingTsExtensions --skipLibCheck`)
 - [ ] No console.log statements (except in error handling)
 - [ ] Existing tests unchanged (unless explicitly required)
 - [ ] New tests added for new features
