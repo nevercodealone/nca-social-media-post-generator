@@ -12,6 +12,14 @@ This tool helps YouTube creators optimize their video content. It takes a transc
 
 The application is specifically designed for the developer community and uses informal language.
 
+## Never Code Alone - Vibe Coding Example
+
+This is a **Never Code Alone** consulting project demonstrating TDD (Test-Driven Development) with no human in the loop for "Vibe Coding" best practices.
+
+This example project is created by **Roland Golla** ([rolandgolla.de](https://rolandgolla.de)) and relates to his 2025 developer keynote: [Vibe Coding](https://talks.nevercodealone.de/vibe-coding.html).
+
+The project is under **MIT license** and open for contributions. You can support this project and help add new features to it.
+
 ## Technology Stack
 
 - **Frontend**: [Astro](https://astro.build/) with [TailwindCSS](https://tailwindcss.com/)
