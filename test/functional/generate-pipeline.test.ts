@@ -192,6 +192,19 @@ TypeScript
       expect(response.status).toBe(200);
       expect(responseData.transcriptCleaned).toBe(true);
     });
+
+    it("should clean transcript by removing single letter with period at end (e.g., M.)", async () => {
+      const mockRequest = createMockRequest({
+        transcript: "Ich freue mich total. M.",
+        type: "youtube",
+      });
+
+      const response = await POST(createMockAstroContext(mockRequest));
+      const responseData = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(responseData.transcriptCleaned).toBe(true);
+    });
   });
 
   describe("Error handling", () => {

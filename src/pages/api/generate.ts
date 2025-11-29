@@ -134,11 +134,15 @@ async function parseAndValidateRequest(
 
 function cleanTranscript(transcript: string): { transcript: string; cleaned: boolean } {
   const words = transcript.trim().split(/\s+/);
-  if (words.length > 0 && words[words.length - 1].length === 1) {
-    words.pop();
-    const cleanedTranscript = words.join(" ");
-    console.log("Ein einzelnes Zeichen am Ende des Transkripts wurde entfernt.");
-    return { transcript: cleanedTranscript, cleaned: true };
+  if (words.length > 0) {
+    const lastWord = words[words.length - 1];
+    // Remove single characters OR single letter followed by period (e.g., "M.", "A.", "S.")
+    if (lastWord.length === 1 || /^[A-Za-z]\.$/.test(lastWord)) {
+      words.pop();
+      const cleanedTranscript = words.join(" ");
+      console.log("Einzelnes Zeichen/Abkürzung am Ende des Transkripts wurde entfernt.");
+      return { transcript: cleanedTranscript, cleaned: true };
+    }
   }
   return { transcript, cleaned: false };
 }
