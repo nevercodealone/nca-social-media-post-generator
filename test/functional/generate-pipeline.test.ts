@@ -135,9 +135,42 @@ TypeScript
     });
 
     it("should handle multiple platform types", async () => {
-      const platforms = ["youtube", "linkedin", "twitter", "instagram", "tiktok"];
+      const platformMocks: Record<string, string> = {
+        youtube: `
+TRANSCRIPT:
+This is a test transcript.
 
-      for (const platform of platforms) {
+TITLE:
+Test Title for YouTube
+
+DESCRIPTION:
+This is a test description for the YouTube platform.
+`,
+        linkedin: `
+LINKEDIN POST:
+This is a test LinkedIn post with professional content.
+`,
+        twitter: `
+TWITTER POST:
+This is a test Twitter post #test
+`,
+        instagram: `
+INSTAGRAM POST:
+This is a test Instagram post with hashtags #test #instagram
+`,
+        tiktok: `
+TIKTOK POST:
+This is a test TikTok post with trending content!
+`,
+      };
+
+      for (const platform of Object.keys(platformMocks)) {
+        mockGeminiGenerate.mockResolvedValueOnce({
+          response: {
+            text: () => platformMocks[platform],
+          },
+        });
+
         const mockRequest = createMockRequest({
           transcript: `This is a test transcript for ${platform} platform.`,
           type: platform,

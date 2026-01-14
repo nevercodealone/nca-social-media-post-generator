@@ -1,8 +1,14 @@
 import type { AIError } from "../types/index.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
+import type { TextBlock } from "@anthropic-ai/sdk/resources/messages.js";
 import { AI_MODELS } from "../config/constants.js";
 import { sanitizeApiKey } from "./validation.js";
+
+// Type guard for Anthropic text content blocks
+function isTextBlock(block: Anthropic.ContentBlock): block is TextBlock {
+  return block.type === "text";
+}
 
 export interface AIProvider {
   readonly name: string;
@@ -30,13 +36,15 @@ export class GoogleGeminiProvider implements AIProvider {
         const text = response.text();
 
         return { text, model };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        const errorStatus = (error as { status?: number }).status;
         errors.push({
           provider: this.name,
-          message: error.message || "Unbekannter Fehler",
-          status: error.status,
+          message: errorMessage,
+          status: errorStatus,
         });
-        console.error(`Fehler mit ${model}:`, error.message);
+        console.error(`Fehler mit ${model}:`, errorMessage);
       }
     }
 
@@ -69,15 +77,21 @@ export class AnthropicProvider implements AIProvider {
           ],
         });
 
-        const text = (message.content[0] as any).text;
+        const firstBlock = message.content[0];
+        if (!firstBlock || !isTextBlock(firstBlock)) {
+          throw new Error("Unexpected response format: no text content");
+        }
+        const text = firstBlock.text;
         return { text, model };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        const errorStatus = (error as { status?: number }).status;
         errors.push({
           provider: this.name,
-          message: error.message || "Unbekannter Fehler",
-          status: error.status,
+          message: errorMessage,
+          status: errorStatus,
         });
-        console.error(`Fehler mit ${model}:`, error.message);
+        console.error(`Fehler mit ${model}:`, errorMessage);
       }
     }
 
@@ -110,12 +124,13 @@ export class AIProviderManager {
       try {
         const result = await provider.generateContent(prompt);
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
         this.errors.push({
           provider: provider.name,
-          message: error.message || "Unbekannter Fehler",
+          message: errorMessage,
         });
-        console.error(`Provider ${provider.name} failed:`, error.message);
+        console.error(`Provider ${provider.name} failed:`, errorMessage);
       }
     }
 

@@ -27,8 +27,8 @@ const getAnthropicModels = (): readonly string[] => {
   if (models) {
     return models.split(",").map((m: string) => m.trim());
   }
-  // Default models if not configured
-  return ["claude-3-haiku-20240307", "claude-3-sonnet-20240229"];
+  // Default models if not configured (updated to current non-deprecated models)
+  return ["claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"];
 };
 
 export const AI_MODELS = {

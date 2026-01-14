@@ -202,13 +202,13 @@ Only Title Present
     it("should trim whitespace from parsed content", () => {
       const responseWithWhitespace = `
 TRANSCRIPT:
-   This transcript has extra whitespace   
+   This transcript has extra whitespace
 
 TITLE:
-   Title with whitespace   
+   Title with whitespace
 
 DESCRIPTION:
-   Description with whitespace   
+   Description with whitespace
 `;
 
       const result = ResponseParser.parseResponse("youtube", responseWithWhitespace);
@@ -216,6 +216,69 @@ DESCRIPTION:
       expect(result.transcript).toBe("This transcript has extra whitespace");
       expect(result.title).toBe("Title with whitespace");
       expect(result.description).toBe("Description with whitespace");
+    });
+
+    it("should normalize hashtags to lowercase in LinkedIn posts", () => {
+      const mockResponse = `
+LINKEDIN POST:
+Check out this #VibeCoding session! #JavaScript #WebDev #NeverCodeAlone
+`;
+
+      const result = ResponseParser.parseResponse("linkedin", mockResponse);
+
+      expect(result.linkedinPost).toContain("#vibecoding");
+      expect(result.linkedinPost).toContain("#javascript");
+      expect(result.linkedinPost).toContain("#webdev");
+      expect(result.linkedinPost).toContain("#nevercodealone");
+      expect(result.linkedinPost).not.toContain("#VibeCoding");
+    });
+
+    it("should normalize hashtags to lowercase in Twitter posts", () => {
+      const mockResponse = `
+TWITTER POST:
+New tutorial on #ReactJS and #TypeScript! #CodingTips
+`;
+
+      const result = ResponseParser.parseResponse("twitter", mockResponse);
+
+      expect(result.twitterPost).toContain("#reactjs");
+      expect(result.twitterPost).toContain("#typescript");
+      expect(result.twitterPost).toContain("#codingtips");
+      expect(result.twitterPost).not.toContain("#ReactJS");
+    });
+
+    it("should normalize hashtags to lowercase in Instagram posts", () => {
+      const mockResponse = `
+INSTAGRAM POST:
+Amazing coding session today!
+
+#NCA #Duisburg #NCATestify #JavaScript #WebDev #Programming
+`;
+
+      const result = ResponseParser.parseResponse("instagram", mockResponse);
+
+      expect(result.instagramPost).toContain("#nca");
+      expect(result.instagramPost).toContain("#duisburg");
+      expect(result.instagramPost).toContain("#ncatestify");
+      expect(result.instagramPost).toContain("#javascript");
+      expect(result.instagramPost).not.toContain("#NCA");
+      expect(result.instagramPost).not.toContain("#JavaScript");
+    });
+
+    it("should normalize hashtags to lowercase in TikTok posts", () => {
+      const mockResponse = `
+TIKTOK POST:
+Quick coding tip for you!
+
+#TechTok #LearnOnTikTok #CodingLife #DevLife
+`;
+
+      const result = ResponseParser.parseResponse("tiktok", mockResponse);
+
+      expect(result.tiktokPost).toContain("#techtok");
+      expect(result.tiktokPost).toContain("#learnontiktok");
+      expect(result.tiktokPost).toContain("#codinglife");
+      expect(result.tiktokPost).not.toContain("#TechTok");
     });
   });
 });

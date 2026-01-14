@@ -54,6 +54,16 @@ export const POST: APIRoute = async ({ request }) => {
     // Parse the response based on platform
     const parsedResponse = ResponseParser.parseResponse(type, text);
 
+    // Validate that the response contains meaningful content
+    const validationError = ResponseParser.validateResponse(type, parsedResponse);
+    if (validationError) {
+      return createErrorResponse(
+        "AI-Antwort enthält keine gültigen Inhalte",
+        502,
+        validationError
+      );
+    }
+
     // Create final response
     const responseData: GenerateResponse = {
       ...parsedResponse,

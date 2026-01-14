@@ -100,7 +100,7 @@ describe("AI Provider Manager - Functional Tests", () => {
 
     it("should successfully generate content", async () => {
       mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ text: "Anthropic generated content" }],
+        content: [{ type: "text", text: "Anthropic generated content" }],
       });
 
       const provider = new AnthropicProvider("test-api-key");
@@ -116,7 +116,7 @@ describe("AI Provider Manager - Functional Tests", () => {
       mockClaudeCreate
         .mockRejectedValueOnce(new Error("First model failed"))
         .mockResolvedValueOnce({
-          content: [{ text: "Fallback anthropic content" }],
+          content: [{ type: "text", text: "Fallback anthropic content" }],
         });
 
       const provider = new AnthropicProvider("test-api-key");

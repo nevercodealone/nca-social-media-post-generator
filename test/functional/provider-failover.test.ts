@@ -54,7 +54,7 @@ describe("Provider Failover - Functional Tests", () => {
         .mockRejectedValueOnce(new Error("Model 2 failed"));
 
       mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ text: "Claude response" }],
+        content: [{ type: "text", text: "Claude response" }],
       });
 
       const manager = new AIProviderManager("google-key", "anthropic-key");
@@ -84,7 +84,7 @@ describe("Provider Failover - Functional Tests", () => {
       mockClaudeCreate
         .mockRejectedValueOnce(new Error("Claude model 1 failed"))
         .mockResolvedValueOnce({
-          content: [{ text: "Claude model 2 success" }],
+          content: [{ type: "text", text: "Claude model 2 success" }],
         });
 
       const manager = new AIProviderManager("google-key", "anthropic-key");
@@ -97,7 +97,7 @@ describe("Provider Failover - Functional Tests", () => {
 
     it("should use only Claude when only Claude key provided", async () => {
       mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ text: "Claude only response" }],
+        content: [{ type: "text", text: "Claude only response" }],
       });
 
       const manager = new AIProviderManager(undefined, "anthropic-key");

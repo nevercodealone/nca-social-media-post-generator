@@ -1,7 +1,42 @@
 // Browser-compatible type definitions and constants
+// NOTE: Validation logic must match src/utils/validation.ts (server is authoritative)
+// These are duplicated for client-side UX; server performs final validation
+
 export const VALIDATION_LIMITS = {
   MAX_KEYWORDS: 3,
 };
+
+// Duration pattern: MM:SS format (e.g., "7:16", "45:30")
+export const DURATION_PATTERN = /^([0-9]{1,2}):([0-5][0-9])$/;
+
+/**
+ * Validates transcript input (client-side)
+ * Must match: src/utils/validation.ts#validateTranscript
+ */
+export function validateTranscript(transcript) {
+  if (!transcript || typeof transcript !== "string") {
+    return ERROR_MESSAGES.INVALID_TRANSCRIPT;
+  }
+  const trimmed = transcript.trim();
+  if (trimmed.length === 0) {
+    return ERROR_MESSAGES.INVALID_TRANSCRIPT;
+  }
+  return null;
+}
+
+/**
+ * Validates video duration format (client-side)
+ * Must match: src/utils/validation.ts#validateVideoDuration
+ */
+export function validateVideoDuration(duration) {
+  if (!duration || duration.trim() === "") {
+    return null; // Optional field
+  }
+  if (!DURATION_PATTERN.test(duration.trim())) {
+    return ERROR_MESSAGES.INVALID_DURATION;
+  }
+  return null;
+}
 
 export const ERROR_MESSAGES = {
   INVALID_TRANSCRIPT: "Bitte gib ein gültiges Transkript ein.",

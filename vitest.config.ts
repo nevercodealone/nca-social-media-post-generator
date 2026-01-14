@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
         ANTHROPIC_API_KEY: env.ANTHROPIC_API_KEY,
         GOOGLE_GEMINI_MODELS: env.GOOGLE_GEMINI_MODELS || "gemini-2.5-pro,gemini-2.5-flash",
         ANTHROPIC_MODELS:
-          env.ANTHROPIC_MODELS || "claude-3-haiku-20240307,claude-3-sonnet-20240229",
+          env.ANTHROPIC_MODELS || "claude-3-5-haiku-20241022,claude-3-5-sonnet-20241022",
       },
       // Use projects for different test configurations
       projects: [
@@ -31,6 +31,15 @@ export default defineConfig(({ mode }) => {
             name: "real",
             include: ["test/real/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
             environment: "node",
+            // Parallelization for real API tests
+            pool: "threads",
+            poolOptions: {
+              threads: {
+                maxThreads: 4,
+                minThreads: 2,
+              },
+            },
+            testTimeout: 45000, // 45s default timeout for real tests
           },
         },
       ],
