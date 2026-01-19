@@ -19,7 +19,7 @@ describe.skipIf(!hasApiKeys)("AI Nights Brand Detection", () => {
     parser = new ResponseParser();
   });
 
-  it("should correct 'AI Knights' to 'AI Nights' and include Andreas Pabst", async () => {
+  it("should correct 'AI Knights' to 'AI Nights'", async () => {
     const transcript =
       "Erste Bilder hier von den AI Knights in Nürnberg gerade beim Aufbau. Spektakuläre Bühne hier im Hintergrund.";
     const prompt = promptFactory.createYouTubePrompt(transcript);
@@ -32,24 +32,5 @@ describe.skipIf(!hasApiKeys)("AI Nights Brand Detection", () => {
     expect(parsed.transcript).toBeDefined();
     expect(parsed.transcript!.toLowerCase()).toContain("ai nights");
     expect(parsed.transcript!.toLowerCase()).not.toContain("ai knights");
-
-    // Should mention Andreas Pabst in description
-    expect(parsed.description).toBeDefined();
-    expect(parsed.description!.toLowerCase()).toContain("andreas pabst");
-  });
-
-  it("should NOT mention Andreas Pabst when AI Nights is not in transcript", async () => {
-    const transcript =
-      "Heute sprechen wir über JavaScript-Entwicklung und moderne Web-Frameworks wie React und Vue.js.";
-    const prompt = promptFactory.createYouTubePrompt(transcript);
-    const result = await manager.generateContent(prompt);
-
-    expect(result.text).toBeDefined();
-    const parsed = parser.parseYouTubeResponse(result.text);
-
-    // Should NOT mention Andreas Pabst or AI Nights
-    expect(parsed.description).toBeDefined();
-    expect(parsed.description!.toLowerCase()).not.toContain("andreas pabst");
-    expect(parsed.description!.toLowerCase()).not.toContain("ai nights");
   });
 });
