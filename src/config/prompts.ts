@@ -341,41 +341,33 @@ TIKTOK POST:
   keywords: {
     base: (
       transcript: string
-    ) => `Du bist ein AI-Assistent für SEO-Keyword-Extraktion. Analysiere das folgende Transkript und extrahiere die 3 wichtigsten Keywords für YouTube-Tags.
+    ) => `Du bist ein SEO-Experte für Developer-Content auf YouTube. Analysiere das folgende Transkript und generiere die 3 besten SEO-Suchbegriffe.
 
 ${GLOBAL_PROMPT_HELPERS.BRAND_NAMES}
 
 Transkript:
 ${transcript}
 
-WICHTIG:
-- Analysiere NUR den gegebenen Text. Verwende KEINE vordefinierten Listen oder Beispiele.
-- KORRIGIERE falsch geschriebene Markennamen gemäß der obigen Liste BEVOR du Keywords extrahierst
-- Wenn "Symphony" im Kontext von Programmierung/PHP vorkommt, korrigiere es zu "Symfony"
-- Behalte zusammengesetzte Begriffe bei (z.B. "Symphony AI" wird zu "Symfony AI")
+DEINE AUFGABE:
+Generiere 3 relevante SEO-Keywords für YouTube-Tags. Die Keywords müssen NICHT wörtlich im Text vorkommen.
 
-AUSSCHLIESSEN (NIEMALS als Keyword verwenden):
-- Kanalnamen und persönliche Marken: "Never Code Alone", "Roland Golla", "NCA"
-- YouTube-spezifische Begriffe: "Video", "YouTube", "Kanal", "Glocke", "Shorts"
-- Aufforderungen: "folgen", "einschalten", "abonnieren", "liken"
-- Allgemeine Wörter: "gut", "machen", "project", "Zukunft", "spektakulär"
+WICHTIGE REGELN:
+- Jedes Keyword ist EIN WORT oder EIN KURZER BEGRIFF (max. 2-3 Wörter)
+- KEINE Nummerierungen (keine "1.", "2.", "3.")
+- KEINE Sätze oder Beschreibungen
+- Verwende etablierte Tech-Begriffe wie sie auf YouTube gesucht werden
 
-Identifiziere die wichtigsten Begriffe, die:
-- Tatsächlich im Transkript vorkommen (nach Korrektur der Markennamen)
-- Das Hauptthema repräsentieren
-- Als YouTube-Tags relevant wären UND hohes Suchvolumen haben
-- Technische Begriffe sind (Programmiersprachen, Frameworks, Tools, AI-Konzepte)
-- Spezifisch genug sind für SEO-Relevanz
+KEYWORD-BEISPIELE (Format):
+- Richtig: ChatGPT, Stack Overflow, PHP
+- Richtig: KI, Testing, Refactoring
+- FALSCH: "1. AI vs Developer Resources" (zu lang, nummeriert)
+- FALSCH: "Future of Coding Platforms" (zu beschreibend)
 
-BEVORZUGE technische Keywords mit hohem Suchvolumen:
-- Programmiersprachen: PHP, JavaScript, TypeScript, Python
-- Frameworks: Symfony, Laravel, React, Vue.js, Astro
-- AI-Tools: Claude, ChatGPT, Gemini, AI Studio
-- Konzepte: Testing, Refactoring, DevOps, CI/CD
+AUSSCHLIESSEN:
+- "Never Code Alone", "Roland Golla", "NCA"
+- "Video", "YouTube", "Kanal", "Shorts"
 
-Extrahiere die 3 relevantesten technischen Keywords direkt aus dem Transkript-Inhalt.
-
-Gib die Keywords in folgendem Format zurück:
+Gib GENAU 3 Keywords zurück, EINES pro Zeile, OHNE Nummerierung:
 
 KEYWORDS:
 keyword1

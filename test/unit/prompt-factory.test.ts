@@ -104,10 +104,10 @@ describe("PromptFactory", () => {
     it("should create keywords prompt", () => {
       const prompt = PromptFactory.createPrompt("keywords", testTranscript);
 
-      expect(prompt).toContain("SEO-Keyword-Extraktion");
+      expect(prompt).toContain("SEO-Experte");
       expect(prompt).toContain(testTranscript);
       expect(prompt).toContain("KEYWORDS:");
-      expect(prompt).toContain("3 wichtigsten Keywords");
+      expect(prompt).toContain("KEINE Nummerierungen");
     });
 
     it("should throw error for unsupported platform type", () => {

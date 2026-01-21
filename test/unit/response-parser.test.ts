@@ -158,6 +158,32 @@ TypeScript
       expect(result.keywords).toEqual(["JavaScript", "React", "TypeScript"]);
     });
 
+    it("should strip numbering from keywords", () => {
+      const mockResponse = `
+KEYWORDS:
+1. ChatGPT
+2. Stack Overflow
+3. KI
+`;
+
+      const result = ResponseParser.parseResponse("keywords", mockResponse);
+
+      expect(result.keywords).toEqual(["ChatGPT", "Stack Overflow", "KI"]);
+    });
+
+    it("should strip various numbering formats from keywords", () => {
+      const mockResponse = `
+KEYWORDS:
+1: PHP
+2) Symfony
+3. Testing
+`;
+
+      const result = ResponseParser.parseResponse("keywords", mockResponse);
+
+      expect(result.keywords).toEqual(["PHP", "Symfony", "Testing"]);
+    });
+
     it("should handle malformed responses gracefully", () => {
       const malformedResponse = "This is not a properly formatted response";
 

@@ -178,6 +178,8 @@ export class ResponseParser {
       const keywords = keywordsText
         .split("\n")
         .map((line) => line.trim())
+        // Remove numbering like "1.", "2.", "3." or "1:", "2:", etc.
+        .map((line) => line.replace(/^\d+[\.\:\)]\s*/, ""))
         .filter((line) => line.length > 0)
         .slice(0, 3);
 
