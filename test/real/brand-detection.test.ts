@@ -5,7 +5,7 @@ import { ResponseParser } from "../../src/utils/response-parser.js";
 
 const hasApiKeys = !!import.meta.env.GOOGLE_GEMINI_API_KEY || !!import.meta.env.ANTHROPIC_API_KEY;
 
-describe.skipIf(!hasApiKeys)("AI Nights Brand Detection", () => {
+describe.skipIf(!hasApiKeys)("Brand Detection", () => {
   let manager: AIProviderManager;
   let promptFactory: PromptFactory;
   let parser: ResponseParser;
@@ -32,5 +32,18 @@ describe.skipIf(!hasApiKeys)("AI Nights Brand Detection", () => {
     expect(parsed.transcript).toBeDefined();
     expect(parsed.transcript!.toLowerCase()).toContain("ai nights");
     expect(parsed.transcript!.toLowerCase()).not.toContain("ai knights");
+  });
+
+  it("should correct 'White Coding' to 'Vibe Coding'", async () => {
+    const transcript = "Heute zeige ich euch White Coding mit Claude. Das ist echt cool.";
+    const prompt = promptFactory.createYouTubePrompt(transcript);
+    const result = await manager.generateContent(prompt);
+
+    expect(result.text).toBeDefined();
+    const parsed = parser.parseYouTubeResponse(result.text);
+
+    expect(parsed.transcript).toBeDefined();
+    expect(parsed.transcript!).toContain("Vibe Coding");
+    expect(parsed.transcript!).not.toContain("White Coding");
   });
 });

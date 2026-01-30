@@ -104,7 +104,7 @@ export class ResponseParser {
 
     const descriptionMatch = text.match(PATTERNS.description);
     if (descriptionMatch?.[1]) {
-      result.description = descriptionMatch[1].trim();
+      result.description = normalizeHashtags(descriptionMatch[1].trim());
     }
 
     const timestampsMatch = text.match(PATTERNS.timestamps);

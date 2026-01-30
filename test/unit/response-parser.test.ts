@@ -291,6 +291,27 @@ Amazing coding session today!
       expect(result.instagramPost).not.toContain("#JavaScript");
     });
 
+    it("should normalize hashtags to lowercase in YouTube descriptions", () => {
+      const mockResponse = `
+TRANSCRIPT:
+Heute zeige ich euch Vibe Coding mit Claude.
+
+TITLE:
+Vibe Coding mit Claude: So funktioniert es
+
+DESCRIPTION:
+Vibe Coding ist der neue Trend. #VibeCoding #JavaScript #WebDev
+`;
+
+      const result = ResponseParser.parseResponse("youtube", mockResponse);
+
+      expect(result.description).toContain("#vibecoding");
+      expect(result.description).toContain("#javascript");
+      expect(result.description).toContain("#webdev");
+      expect(result.description).not.toContain("#VibeCoding");
+      expect(result.description).not.toContain("#JavaScript");
+    });
+
     it("should normalize hashtags to lowercase in TikTok posts", () => {
       const mockResponse = `
 TIKTOK POST:
