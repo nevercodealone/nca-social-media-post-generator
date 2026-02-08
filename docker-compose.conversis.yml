@@ -1,0 +1,24 @@
+services:
+  webserver:
+    container_name: $SHORTCODE1-web
+    image: $IMAGE
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.$SHORTCODE1.entrypoints=http'
+      - 'traefik.http.routers.$SHORTCODE1.rule=Host(`$URL`)'
+      - 'traefik.http.middlewares.$SHORTCODE1-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.$SHORTCODE1.middlewares=$SHORTCODE1-https-redirect'
+      - 'traefik.http.routers.$SHORTCODE1-secure.entrypoints=https'
+      - 'traefik.http.routers.$SHORTCODE1-secure.rule=Host(`$URL`)'
+      - 'traefik.http.routers.$SHORTCODE1-secure.tls=true'
+      - 'traefik.http.routers.$SHORTCODE1-secure.tls.certresolver=http'
+      - 'traefik.http.routers.$SHORTCODE1-secure.service=$SHORTCODE1'
+      - 'traefik.http.services.$SHORTCODE1.loadbalancer.server.port=80'
+      - 'traefik.docker.network=proxy'
+
+networks:
+  proxy:
+    external: true

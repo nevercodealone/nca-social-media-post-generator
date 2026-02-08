@@ -1,0 +1,38 @@
+variables:
+  CI_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/$CI_COMMIT_REF_SLUG:$CI_PIPELINE_ID
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker build -f Dockerfile.conversis -t $CI_IMAGE --pull .
+    - docker push $CI_IMAGE
+  tags:
+    - docker1
+
+deploy:
+  stage: deploy
+  tags:
+    - docker2
+  only:
+    - merge_request
+    - main
+  when: manual
+  needs: ['build']
+  environment:
+    name: live
+    url: https://$URL
+  variables:
+    IMAGE: $CI_IMAGE
+    SHORTCODE1: $SHORTCODE
+  image: docker:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
+    - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
