@@ -8,16 +8,12 @@ const {
   EDITOR_PASSWORD,
   GOOGLE_GEMINI_API_KEY,
   GOOGLE_GEMINI_MODELS,
-  ANTHROPIC_API_KEY,
-  ANTHROPIC_MODELS,
 } = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 Object.assign(process.env, {
   EDITOR_ADMIN,
   EDITOR_PASSWORD,
   GOOGLE_GEMINI_API_KEY,
   GOOGLE_GEMINI_MODELS,
-  ANTHROPIC_API_KEY,
-  ANTHROPIC_MODELS,
 });
 
 // https://astro.build/config
