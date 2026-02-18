@@ -36,4 +36,3 @@ deploy:
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
-    - docker exec $SHORTCODE1-web npm run build
