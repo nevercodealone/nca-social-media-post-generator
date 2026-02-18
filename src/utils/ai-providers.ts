@@ -1,14 +1,7 @@
 import type { AIError } from "../types/index.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Anthropic from "@anthropic-ai/sdk";
-import type { TextBlock } from "@anthropic-ai/sdk/resources/messages.js";
 import { AI_MODELS } from "../config/constants.js";
 import { sanitizeApiKey } from "./validation.js";
-
-// Type guard for Anthropic text content blocks
-function isTextBlock(block: Anthropic.ContentBlock): block is TextBlock {
-  return block.type === "text";
-}
 
 export interface AIProvider {
   readonly name: string;
@@ -52,68 +45,15 @@ export class GoogleGeminiProvider implements AIProvider {
   }
 }
 
-export class AnthropicProvider implements AIProvider {
-  readonly name = "Anthropic Claude";
-  readonly models = AI_MODELS.anthropic;
-  private anthropic: Anthropic;
-
-  constructor(apiKey: string) {
-    this.anthropic = new Anthropic({ apiKey: sanitizeApiKey(apiKey) });
-  }
-
-  async generateContent(prompt: string): Promise<{ text: string; model: string }> {
-    const errors: AIError[] = [];
-
-    for (const model of this.models) {
-      try {
-        const message = await this.anthropic.messages.create({
-          model,
-          max_tokens: 4000,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        });
-
-        const firstBlock = message.content[0];
-        if (!firstBlock || !isTextBlock(firstBlock)) {
-          throw new Error("Unexpected response format: no text content");
-        }
-        const text = firstBlock.text;
-        return { text, model };
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
-        const errorStatus = (error as { status?: number }).status;
-        errors.push({
-          provider: this.name,
-          message: errorMessage,
-          status: errorStatus,
-        });
-        console.error(`Fehler mit ${model}:`, errorMessage);
-      }
-    }
-
-    throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
-  }
-}
-
 export class AIProviderManager {
   private providers: AIProvider[] = [];
   private errors: AIError[] = [];
 
-  constructor(googleApiKey?: string, anthropicApiKey?: string) {
-    if (googleApiKey) {
-      this.providers.push(new GoogleGeminiProvider(googleApiKey));
-    }
-
-    if (anthropicApiKey) {
-      this.providers.push(new AnthropicProvider(anthropicApiKey));
-    }
+  constructor(providers: AIProvider[]) {
+    this.providers = providers;
 
     if (this.providers.length === 0) {
-      throw new Error("No API keys provided for AI providers");
+      throw new Error("No AI providers configured");
     }
   }
 
@@ -134,9 +74,7 @@ export class AIProviderManager {
       }
     }
 
-    // If all providers failed
     const errorMessage = this.errors.map((e) => `${e.provider}: ${e.message}`).join(", ");
-
     throw new Error(`All AI providers failed: ${errorMessage}`);
   }
 

@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AI_MODELS } from "../../src/config/constants.js";
 import {
   mockGeminiGenerate,
-  mockClaudeCreate,
   setupSuccessfulMocks,
   resetAllMocks,
 } from "../utils/ai-mocks.js";
@@ -10,7 +9,6 @@ import {
 // Mock the Astro environment
 const mockEnv = {
   GOOGLE_GEMINI_API_KEY: "mock-google-key",
-  ANTHROPIC_API_KEY: "mock-anthropic-key",
 };
 
 vi.mock("astro:env", () => ({
@@ -37,14 +35,6 @@ vi.mock("@google/generative-ai", () => ({
     getGenerativeModel: vi.fn().mockReturnValue({
       generateContent: mockGeminiGenerate,
     }),
-  })),
-}));
-
-vi.mock("@anthropic-ai/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      create: mockClaudeCreate,
-    },
   })),
 }));
 

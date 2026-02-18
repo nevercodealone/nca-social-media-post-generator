@@ -6,13 +6,20 @@ import { PromptFactory } from "../../utils/prompt-factory.js";
 import { ResponseParser } from "../../utils/response-parser.js";
 
 // Initialize AI providers
+import { GoogleGeminiProvider } from "../../utils/ai-providers.js";
+
 const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY;
-const ANTHROPIC_API_KEY = import.meta.env.ANTHROPIC_API_KEY;
 
 let aiProviderManager: AIProviderManager;
 
 try {
-  aiProviderManager = new AIProviderManager(GOOGLE_GEMINI_API_KEY, ANTHROPIC_API_KEY);
+  const providers = [];
+
+  if (GOOGLE_GEMINI_API_KEY) {
+    providers.push(new GoogleGeminiProvider(GOOGLE_GEMINI_API_KEY));
+  }
+
+  aiProviderManager = new AIProviderManager(providers);
 } catch (error) {
   console.error("Failed to initialize AI providers:", error);
 }

@@ -1,14 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   GoogleGeminiProvider,
-  AnthropicProvider,
   AIProviderManager,
 } from "../../src/utils/ai-providers.js";
 import { AI_MODELS } from "../../src/config/constants.js";
 import {
   mockGeminiGenerate,
-  mockClaudeCreate,
-  setupGeminiFailure,
   setupAllProvidersFail,
   resetAllMocks,
 } from "../utils/ai-mocks.js";
@@ -19,14 +16,6 @@ vi.mock("@google/generative-ai", () => ({
     getGenerativeModel: vi.fn(() => ({
       generateContent: mockGeminiGenerate,
     })),
-  })),
-}));
-
-vi.mock("@anthropic-ai/sdk", () => ({
-  default: vi.fn(() => ({
-    messages: {
-      create: mockClaudeCreate,
-    },
   })),
 }));
 
@@ -91,53 +80,15 @@ describe("AI Provider Manager - Functional Tests", () => {
     });
   });
 
-  describe("AnthropicProvider workflows", () => {
-    it("should initialize with correct name and models", () => {
-      const provider = new AnthropicProvider("test-api-key");
-      expect(provider.name).toBe("Anthropic Claude");
-      expect(provider.models).toEqual(AI_MODELS.anthropic);
-    });
-
-    it("should successfully generate content", async () => {
-      mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ type: "text", text: "Anthropic generated content" }],
-      });
-
-      const provider = new AnthropicProvider("test-api-key");
-      const result = await provider.generateContent("test prompt");
-
-      expect(result).toEqual({
-        text: "Anthropic generated content",
-        model: AI_MODELS.anthropic[0],
-      });
-    });
-
-    it("should fallback to second model if first fails", async () => {
-      mockClaudeCreate
-        .mockRejectedValueOnce(new Error("First model failed"))
-        .mockResolvedValueOnce({
-          content: [{ type: "text", text: "Fallback anthropic content" }],
-        });
-
-      const provider = new AnthropicProvider("test-api-key");
-      const result = await provider.generateContent("test prompt");
-
-      expect(result).toEqual({
-        text: "Fallback anthropic content",
-        model: AI_MODELS.anthropic[1],
-      });
-      expect(mockClaudeCreate).toHaveBeenCalledTimes(2);
-    });
-  });
-
   describe("AIProviderManager workflows", () => {
-    it("should initialize with both providers when API keys provided", () => {
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+    it("should initialize with providers", () => {
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
       expect(manager).toBeDefined();
     });
 
-    it("should throw error when no API keys provided", () => {
-      expect(() => new AIProviderManager()).toThrow("No API keys provided for AI providers");
+    it("should throw error when no providers given", () => {
+      expect(() => new AIProviderManager([])).toThrow("No AI providers configured");
     });
 
     it("should use Google Gemini successfully", async () => {
@@ -147,7 +98,8 @@ describe("AI Provider Manager - Functional Tests", () => {
         },
       });
 
-      const manager = new AIProviderManager("google-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
       const result = await manager.generateContent("test prompt");
 
       expect(result.text).toBe("Google success");
@@ -155,22 +107,11 @@ describe("AI Provider Manager - Functional Tests", () => {
       expect(mockGeminiGenerate).toHaveBeenCalled();
     });
 
-    it("should fallback from Google to Anthropic on failure", async () => {
-      setupGeminiFailure();
-
-      const manager = new AIProviderManager("google-key", "anthropic-key");
-      const result = await manager.generateContent("test prompt");
-
-      expect(result.text).toBe("Mock Claude response");
-      expect(result.model).toBe(AI_MODELS.anthropic[0]);
-      expect(mockGeminiGenerate).toHaveBeenCalled();
-      expect(mockClaudeCreate).toHaveBeenCalled();
-    });
-
     it("should throw error when all providers fail", async () => {
       setupAllProvidersFail();
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       await expect(manager.generateContent("test prompt")).rejects.toThrow(
         "All AI providers failed"
@@ -180,7 +121,8 @@ describe("AI Provider Manager - Functional Tests", () => {
     it("should track errors from failed providers", async () => {
       setupAllProvidersFail();
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       try {
         await manager.generateContent("test prompt");

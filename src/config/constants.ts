@@ -22,18 +22,8 @@ const getGoogleModels = (): readonly string[] => {
   return ["gemini-2.5-pro", "gemini-2.5-flash"];
 };
 
-const getAnthropicModels = (): readonly string[] => {
-  const models = import.meta.env.ANTHROPIC_MODELS;
-  if (models) {
-    return models.split(",").map((m: string) => m.trim());
-  }
-  // Default models if not configured (updated to current non-deprecated models)
-  return ["claude-3-5-haiku-20241022", "claude-3-5-sonnet-20241022"];
-};
-
 export const AI_MODELS = {
   google: getGoogleModels(),
-  anthropic: getAnthropicModels(),
 } as const;
 
 export const PLATFORM_CONFIGS: Record<SocialMediaPlatform, PlatformConfig> = {

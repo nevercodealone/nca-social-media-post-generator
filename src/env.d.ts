@@ -3,9 +3,7 @@
 
 interface ImportMetaEnv {
   readonly GOOGLE_GEMINI_API_KEY: string;
-  readonly ANTHROPIC_API_KEY: string;
   readonly GOOGLE_GEMINI_MODELS?: string;
-  readonly ANTHROPIC_MODELS?: string;
 }
 
 interface ImportMeta {

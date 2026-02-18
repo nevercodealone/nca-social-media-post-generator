@@ -1,20 +1,21 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { AIProviderManager } from "../../src/utils/ai-providers.js";
+import { GoogleGeminiProvider, AIProviderManager } from "../../src/utils/ai-providers.js";
 import { PromptFactory } from "../../src/utils/prompt-factory.js";
 import { ResponseParser } from "../../src/utils/response-parser.js";
 
-const hasApiKeys = !!import.meta.env.GOOGLE_GEMINI_API_KEY || !!import.meta.env.ANTHROPIC_API_KEY;
+const hasGoogleKey = !!import.meta.env.GOOGLE_GEMINI_API_KEY;
 
-describe.skipIf(!hasApiKeys)("Brand Detection", () => {
+describe.skipIf(!hasGoogleKey)("Brand Detection", () => {
   let manager: AIProviderManager;
   let promptFactory: PromptFactory;
   let parser: ResponseParser;
 
   beforeAll(() => {
-    manager = new AIProviderManager(
-      import.meta.env.GOOGLE_GEMINI_API_KEY,
-      import.meta.env.ANTHROPIC_API_KEY
-    );
+    const providers = [];
+    if (import.meta.env.GOOGLE_GEMINI_API_KEY) {
+      providers.push(new GoogleGeminiProvider(import.meta.env.GOOGLE_GEMINI_API_KEY));
+    }
+    manager = new AIProviderManager(providers);
     promptFactory = new PromptFactory();
     parser = new ResponseParser();
   });
