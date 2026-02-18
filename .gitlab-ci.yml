@@ -23,7 +23,7 @@ deploy:
     - merge_request
     - main
   when: manual
-  needs: ['build']
+  needs: ["build"]
   environment:
     name: live
     url: https://$URL
@@ -36,3 +36,4 @@ deploy:
   script:
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 rm -sfv || true
     - docker compose -f docker-compose.conversis.yml -p $SHORTCODE1 up -d --remove-orphans
+    - docker exec $SHORTCODE1-web npm run build
