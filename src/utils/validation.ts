@@ -48,3 +48,22 @@ export function sanitizeApiKey(key?: string): string {
   if (!key) return "";
   return key.replace(/["']/g, "").trim();
 }
+
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+
+export function validateVideoFile(file: { name: string; size: number; type: string }): string | null {
+  if (!file) {
+    return "Bitte wähle eine Video-Datei aus.";
+  }
+
+  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+    return "Ungültiges Format. Erlaubt sind: MP4, MOV, WebM.";
+  }
+
+  if (file.size > MAX_VIDEO_SIZE) {
+    return "Die Datei ist zu groß. Maximal 100 MB erlaubt.";
+  }
+
+  return null;
+}
