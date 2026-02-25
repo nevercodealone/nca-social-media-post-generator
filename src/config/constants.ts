@@ -103,6 +103,14 @@ export const ERROR_MESSAGES = {
   NETWORK_ERROR: "Netzwerkfehler. Bitte versuche es erneut.",
 } as const;
 
+export const VIDEO_CONSTANTS = {
+  MAX_SIZE_BYTES: 100 * 1024 * 1024,
+  ALLOWED_TYPES: ["video/mp4", "video/quicktime", "video/webm"] as const,
+  TRANSCRIPT_PROMPT: `Extrahiere das gesprochene Wort aus diesem Video als vollständiges Transkript.
+Gib NUR den gesprochenen Text zurück, ohne Zeitstempel, ohne Formatierung, ohne Erklärungen.
+Nur der reine gesprochene Text als durchgehender Fließtext.`,
+} as const;
+
 export const UI_MESSAGES = {
   DETECTING_KEYWORDS: "Erkennt...",
   DETECT_KEYWORDS: "Keywords automatisch erkennen",

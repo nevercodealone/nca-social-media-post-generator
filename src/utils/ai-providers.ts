@@ -1,12 +1,13 @@
 import type { AIError } from "../types/index.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AI_MODELS } from "../config/constants.js";
+import { AI_MODELS, VIDEO_CONSTANTS } from "../config/constants.js";
 import { sanitizeApiKey } from "./validation.js";
 
 export interface AIProvider {
   readonly name: string;
   readonly models: readonly string[];
   generateContent(prompt: string): Promise<{ text: string; model: string }>;
+  extractTranscript?(videoBuffer: Buffer, mimeType: string): Promise<{ text: string; model: string }>;
 }
 
 export class GoogleGeminiProvider implements AIProvider {
@@ -42,6 +43,33 @@ export class GoogleGeminiProvider implements AIProvider {
     }
 
     throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
+  }
+
+  async extractTranscript(videoBuffer: Buffer, mimeType: string): Promise<{ text: string; model: string }> {
+    const errors: AIError[] = [];
+
+    for (const model of this.models) {
+      try {
+        const genModel = this.genAI.getGenerativeModel({ model });
+        const videoData = {
+          inlineData: {
+            data: videoBuffer.toString("base64"),
+            mimeType,
+          },
+        };
+        const result = await genModel.generateContent([VIDEO_CONSTANTS.TRANSCRIPT_PROMPT, videoData]);
+        const response = await result.response;
+        const text = response.text();
+        return { text, model };
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        const errorStatus = (error as { status?: number }).status;
+        errors.push({ provider: this.name, message: errorMessage, status: errorStatus });
+        console.error(`Video transcript extraction failed with ${model}:`, errorMessage);
+      }
+    }
+
+    throw new Error(`${this.name} video transcript extraction failed: ${errors.map((e) => e.message).join(", ")}`);
   }
 }
 
