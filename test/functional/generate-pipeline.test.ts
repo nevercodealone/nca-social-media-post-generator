@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AI_MODELS } from "../../src/config/constants.js";
 import {
   mockGeminiGenerate,
-  mockClaudeCreate,
   setupSuccessfulMocks,
   resetAllMocks,
 } from "../utils/ai-mocks.js";
@@ -10,7 +9,6 @@ import {
 // Mock the Astro environment
 const mockEnv = {
   GOOGLE_GEMINI_API_KEY: "mock-google-key",
-  ANTHROPIC_API_KEY: "mock-anthropic-key",
 };
 
 vi.mock("astro:env", () => ({
@@ -37,14 +35,6 @@ vi.mock("@google/generative-ai", () => ({
     getGenerativeModel: vi.fn().mockReturnValue({
       generateContent: mockGeminiGenerate,
     }),
-  })),
-}));
-
-vi.mock("@anthropic-ai/sdk", () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      create: mockClaudeCreate,
-    },
   })),
 }));
 
@@ -135,9 +125,42 @@ TypeScript
     });
 
     it("should handle multiple platform types", async () => {
-      const platforms = ["youtube", "linkedin", "twitter", "instagram", "tiktok"];
+      const platformMocks: Record<string, string> = {
+        youtube: `
+TRANSCRIPT:
+This is a test transcript.
 
-      for (const platform of platforms) {
+TITLE:
+Test Title for YouTube
+
+DESCRIPTION:
+This is a test description for the YouTube platform.
+`,
+        linkedin: `
+LINKEDIN POST:
+This is a test LinkedIn post with professional content.
+`,
+        twitter: `
+TWITTER POST:
+This is a test Twitter post #test
+`,
+        instagram: `
+INSTAGRAM POST:
+This is a test Instagram post with hashtags #test #instagram
+`,
+        tiktok: `
+TIKTOK POST:
+This is a test TikTok post with trending content!
+`,
+      };
+
+      for (const platform of Object.keys(platformMocks)) {
+        mockGeminiGenerate.mockResolvedValueOnce({
+          response: {
+            text: () => platformMocks[platform],
+          },
+        });
+
         const mockRequest = createMockRequest({
           transcript: `This is a test transcript for ${platform} platform.`,
           type: platform,

@@ -1,13 +1,15 @@
 import type { AIError } from "../types/index.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Anthropic from "@anthropic-ai/sdk";
-import { AI_MODELS } from "../config/constants.js";
+import { AI_MODELS, VIDEO_CONSTANTS } from "../config/constants.js";
 import { sanitizeApiKey } from "./validation.js";
 
 export interface AIProvider {
   readonly name: string;
   readonly models: readonly string[];
   generateContent(prompt: string): Promise<{ text: string; model: string }>;
+  extractTranscript?(videoBuffer: Buffer, mimeType: string): Promise<{ text: string; model: string }>;
+  startChatSession?(): void;
+  sendChatMessage?(message: string): Promise<{ text: string; model: string }>;
 }
 
 export class GoogleGeminiProvider implements AIProvider {
@@ -30,58 +32,66 @@ export class GoogleGeminiProvider implements AIProvider {
         const text = response.text();
 
         return { text, model };
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        const errorStatus = (error as { status?: number }).status;
         errors.push({
           provider: this.name,
-          message: error.message || "Unbekannter Fehler",
-          status: error.status,
+          message: errorMessage,
+          status: errorStatus,
         });
-        console.error(`Fehler mit ${model}:`, error.message);
+        console.error(`Fehler mit ${model}:`, errorMessage);
       }
     }
 
     throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
   }
-}
 
-export class AnthropicProvider implements AIProvider {
-  readonly name = "Anthropic Claude";
-  readonly models = AI_MODELS.anthropic;
-  private anthropic: Anthropic;
-
-  constructor(apiKey: string) {
-    this.anthropic = new Anthropic({ apiKey: sanitizeApiKey(apiKey) });
-  }
-
-  async generateContent(prompt: string): Promise<{ text: string; model: string }> {
+  async extractTranscript(videoBuffer: Buffer, mimeType: string): Promise<{ text: string; model: string }> {
     const errors: AIError[] = [];
 
     for (const model of this.models) {
       try {
-        const message = await this.anthropic.messages.create({
-          model,
-          max_tokens: 4000,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        });
-
-        const text = (message.content[0] as any).text;
+        const genModel = this.genAI.getGenerativeModel({ model });
+        const videoData = {
+          inlineData: {
+            data: videoBuffer.toString("base64"),
+            mimeType,
+          },
+        };
+        const result = await genModel.generateContent([VIDEO_CONSTANTS.TRANSCRIPT_PROMPT, videoData]);
+        const response = await result.response;
+        const text = response.text();
         return { text, model };
-      } catch (error: any) {
-        errors.push({
-          provider: this.name,
-          message: error.message || "Unbekannter Fehler",
-          status: error.status,
-        });
-        console.error(`Fehler mit ${model}:`, error.message);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
+        const errorStatus = (error as { status?: number }).status;
+        errors.push({ provider: this.name, message: errorMessage, status: errorStatus });
+        console.error(`Video transcript extraction failed with ${model}:`, errorMessage);
       }
     }
 
-    throw new Error(`${this.name} failed: ${errors.map((e) => e.message).join(", ")}`);
+    throw new Error(`${this.name} video transcript extraction failed: ${errors.map((e) => e.message).join(", ")}`);
+  }
+
+  private chatSession: any = null;
+  private chatModel: string = "";
+
+  startChatSession(): void {
+    const model = this.models[0];
+    const genModel = this.genAI.getGenerativeModel({ model });
+    this.chatSession = genModel.startChat();
+    this.chatModel = model;
+  }
+
+  async sendChatMessage(message: string): Promise<{ text: string; model: string }> {
+    if (!this.chatSession) {
+      throw new Error("Chat session not started. Call startChatSession() first.");
+    }
+    const result = await this.chatSession.sendMessage(message);
+    const response = await result.response;
+    const text = response.text();
+    return { text, model: this.chatModel };
   }
 }
 
@@ -89,17 +99,11 @@ export class AIProviderManager {
   private providers: AIProvider[] = [];
   private errors: AIError[] = [];
 
-  constructor(googleApiKey?: string, anthropicApiKey?: string) {
-    if (googleApiKey) {
-      this.providers.push(new GoogleGeminiProvider(googleApiKey));
-    }
-
-    if (anthropicApiKey) {
-      this.providers.push(new AnthropicProvider(anthropicApiKey));
-    }
+  constructor(providers: AIProvider[]) {
+    this.providers = providers;
 
     if (this.providers.length === 0) {
-      throw new Error("No API keys provided for AI providers");
+      throw new Error("No AI providers configured");
     }
   }
 
@@ -110,18 +114,17 @@ export class AIProviderManager {
       try {
         const result = await provider.generateContent(prompt);
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Unbekannter Fehler";
         this.errors.push({
           provider: provider.name,
-          message: error.message || "Unbekannter Fehler",
+          message: errorMessage,
         });
-        console.error(`Provider ${provider.name} failed:`, error.message);
+        console.error(`Provider ${provider.name} failed:`, errorMessage);
       }
     }
 
-    // If all providers failed
     const errorMessage = this.errors.map((e) => `${e.provider}: ${e.message}`).join(", ");
-
     throw new Error(`All AI providers failed: ${errorMessage}`);
   }
 

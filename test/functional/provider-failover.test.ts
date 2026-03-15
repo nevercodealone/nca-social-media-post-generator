@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { AIProviderManager } from "../../src/utils/ai-providers.js";
+import { GoogleGeminiProvider, AIProviderManager } from "../../src/utils/ai-providers.js";
 import { AI_MODELS } from "../../src/config/constants.js";
 import {
   mockGeminiGenerate,
-  mockClaudeCreate,
-  setupGeminiFailure,
   setupAllProvidersFail,
   resetAllMocks,
 } from "../utils/ai-mocks.js";
@@ -15,14 +13,6 @@ vi.mock("@google/generative-ai", () => ({
     getGenerativeModel: vi.fn(() => ({
       generateContent: mockGeminiGenerate,
     })),
-  })),
-}));
-
-vi.mock("@anthropic-ai/sdk", () => ({
-  default: vi.fn(() => ({
-    messages: {
-      create: mockClaudeCreate,
-    },
   })),
 }));
 
@@ -39,73 +29,44 @@ describe("Provider Failover - Functional Tests", () => {
         },
       });
 
-      const manager = new AIProviderManager("google-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
       const result = await manager.generateContent("test prompt");
 
       expect(result.text).toBe("Google response");
       expect(result.model).toBe(AI_MODELS.google[0]);
       expect(mockGeminiGenerate).toHaveBeenCalledTimes(1);
-      expect(mockClaudeCreate).not.toHaveBeenCalled();
     });
 
-    it("should try all Google models before failing over", async () => {
+    it("should try all Google models before failing", async () => {
       mockGeminiGenerate
         .mockRejectedValueOnce(new Error("Model 1 failed"))
         .mockRejectedValueOnce(new Error("Model 2 failed"));
 
-      mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ text: "Claude response" }],
-      });
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
-      const result = await manager.generateContent("test prompt");
-
-      expect(result.text).toBe("Claude response");
+      await expect(manager.generateContent("test prompt")).rejects.toThrow(
+        "All AI providers failed"
+      );
       expect(mockGeminiGenerate).toHaveBeenCalledTimes(AI_MODELS.google.length);
-      expect(mockClaudeCreate).toHaveBeenCalled();
-    });
-  });
-
-  describe("Anthropic Claude failover", () => {
-    it("should failover to Claude when Google fails", async () => {
-      setupGeminiFailure();
-
-      const manager = new AIProviderManager("google-key", "anthropic-key");
-      const result = await manager.generateContent("test prompt");
-
-      expect(result.text).toBe("Mock Claude response");
-      expect(result.model).toBe(AI_MODELS.anthropic[0]);
-      expect(mockGeminiGenerate).toHaveBeenCalled();
-      expect(mockClaudeCreate).toHaveBeenCalled();
     });
 
-    it("should try all Claude models after Google fails", async () => {
-      mockGeminiGenerate.mockRejectedValue(new Error("Google failed"));
-      mockClaudeCreate
-        .mockRejectedValueOnce(new Error("Claude model 1 failed"))
+    it("should fallback to second model if first fails", async () => {
+      mockGeminiGenerate
+        .mockRejectedValueOnce(new Error("Model 1 failed"))
         .mockResolvedValueOnce({
-          content: [{ text: "Claude model 2 success" }],
+          response: {
+            text: () => "Model 2 success",
+          },
         });
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
       const result = await manager.generateContent("test prompt");
 
-      expect(result.text).toBe("Claude model 2 success");
-      expect(result.model).toBe(AI_MODELS.anthropic[1]);
-      expect(mockClaudeCreate).toHaveBeenCalledTimes(2);
-    });
-
-    it("should use only Claude when only Claude key provided", async () => {
-      mockClaudeCreate.mockResolvedValueOnce({
-        content: [{ text: "Claude only response" }],
-      });
-
-      const manager = new AIProviderManager(undefined, "anthropic-key");
-      const result = await manager.generateContent("test prompt");
-
-      expect(result.text).toBe("Claude only response");
-      expect(mockGeminiGenerate).not.toHaveBeenCalled();
-      expect(mockClaudeCreate).toHaveBeenCalled();
+      expect(result.text).toBe("Model 2 success");
+      expect(result.model).toBe(AI_MODELS.google[1]);
     });
   });
 
@@ -113,7 +74,8 @@ describe("Provider Failover - Functional Tests", () => {
     it("should throw error when all providers fail", async () => {
       setupAllProvidersFail();
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       await expect(manager.generateContent("test prompt")).rejects.toThrow(
         "All AI providers failed"
@@ -121,13 +83,10 @@ describe("Provider Failover - Functional Tests", () => {
     });
 
     it("should collect all errors from failed providers", async () => {
-      const googleError = new Error("Google error");
-      const claudeError = new Error("Claude error");
+      setupAllProvidersFail();
 
-      mockGeminiGenerate.mockRejectedValue(googleError);
-      mockClaudeCreate.mockRejectedValue(claudeError);
-
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       try {
         await manager.generateContent("test prompt");
@@ -136,13 +95,12 @@ describe("Provider Failover - Functional Tests", () => {
       }
 
       const errors = manager.getLastErrors();
-      expect(errors.length).toBe(2);
+      expect(errors.length).toBe(1);
       expect(errors.some((e) => e.provider === "Google Gemini")).toBe(true);
-      expect(errors.some((e) => e.provider === "Anthropic Claude")).toBe(true);
     });
 
-    it("should throw error when no API keys provided", () => {
-      expect(() => new AIProviderManager()).toThrow("No API keys provided for AI providers");
+    it("should throw error when no providers given", () => {
+      expect(() => new AIProviderManager([])).toThrow("No AI providers configured");
     });
   });
 
@@ -150,7 +108,8 @@ describe("Provider Failover - Functional Tests", () => {
     it("should track last errors from each provider", async () => {
       setupAllProvidersFail();
 
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       try {
         await manager.generateContent("test prompt");
@@ -163,15 +122,13 @@ describe("Provider Failover - Functional Tests", () => {
 
       const googleError = errors.find((e) => e.provider === "Google Gemini");
       expect(googleError).toBeDefined();
-
-      const claudeError = errors.find((e) => e.provider === "Anthropic Claude");
-      expect(claudeError).toBeDefined();
     });
 
     it("should clear errors on successful generation", async () => {
       // First attempt fails
       setupAllProvidersFail();
-      const manager = new AIProviderManager("google-key", "anthropic-key");
+      const provider = new GoogleGeminiProvider("google-key");
+      const manager = new AIProviderManager([provider]);
 
       try {
         await manager.generateContent("test prompt");
@@ -191,7 +148,6 @@ describe("Provider Failover - Functional Tests", () => {
 
       await manager.generateContent("test prompt");
 
-      // Errors should still be present (they don't clear automatically)
       expect(manager.getLastErrors()).toBeDefined();
     });
   });

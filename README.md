@@ -34,6 +34,10 @@ The project is under **MIT license** and open for contributions. You can support
 - **Copy-to-Clipboard**: Convenient buttons for copying transcript, title, and description
 - **Automatic Cleanup**: Removes single characters at the end of transcripts (common error in automatic transcription)
 - **AI Fallback**: Automatically switches to Claude when Google Gemini is unavailable or rate-limited
+- **Video Upload**: Upload a video file (MP4, MOV, WebM up to 100 MB) and automatically extract transcript via Gemini
+- **Multi-Platform Generation**: Generates optimized content for YouTube, LinkedIn, Instagram, and TikTok simultaneously
+- **Platform Approval**: Review and approve/regenerate content per platform before publishing
+- **n8n Integration**: Send approved content + video to n8n webhook for automated distribution
 
 ## Installation
 
@@ -55,6 +59,7 @@ The project is under **MIT license** and open for contributions. You can support
      ```
      GOOGLE_GEMINI_API_KEY=your-key-here
      ANTHROPIC_API_KEY=your-key-here
+     N8N_WEBHOOK_URL=your-n8n-webhook-url
      ```
    - Optional: Customize AI models (comma-separated, tries in order):
      ```

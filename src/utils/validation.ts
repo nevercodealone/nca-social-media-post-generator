@@ -1,5 +1,12 @@
 import { VALIDATION_LIMITS, ERROR_MESSAGES } from "../config/constants.js";
 
+// Duration pattern: MM:SS format (e.g., "7:16", "45:30")
+const DURATION_PATTERN = /^([0-9]{1,2}):([0-5][0-9])$/;
+
+/**
+ * Validates transcript input (server-side, authoritative)
+ * Client-side mirror: src/scripts/types.js#validateTranscript
+ */
 export function validateTranscript(transcript: string): string | null {
   if (!transcript || typeof transcript !== "string") {
     return ERROR_MESSAGES.INVALID_TRANSCRIPT;
@@ -13,13 +20,16 @@ export function validateTranscript(transcript: string): string | null {
   return null;
 }
 
+/**
+ * Validates video duration format (server-side, authoritative)
+ * Client-side mirror: src/scripts/types.js#validateVideoDuration
+ */
 export function validateVideoDuration(duration?: string): string | null {
   if (!duration || duration.trim() === "") {
     return null; // Optional field
   }
 
-  const durationPattern = /^([0-9]{1,2}):([0-5][0-9])$/;
-  if (!durationPattern.test(duration.trim())) {
+  if (!DURATION_PATTERN.test(duration.trim())) {
     return ERROR_MESSAGES.INVALID_DURATION;
   }
 
@@ -37,4 +47,23 @@ export function validateKeywords(keywords: string[]): string | null {
 export function sanitizeApiKey(key?: string): string {
   if (!key) return "";
   return key.replace(/["']/g, "").trim();
+}
+
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/quicktime", "video/webm"];
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100 MB
+
+export function validateVideoFile(file: { name: string; size: number; type: string }): string | null {
+  if (!file) {
+    return "Bitte wähle eine Video-Datei aus.";
+  }
+
+  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
+    return "Ungültiges Format. Erlaubt sind: MP4, MOV, WebM.";
+  }
+
+  if (file.size > MAX_VIDEO_SIZE) {
+    return "Die Datei ist zu groß. Maximal 100 MB erlaubt.";
+  }
+
+  return null;
 }

@@ -1,31 +1,13 @@
-import { VALIDATION_LIMITS, ERROR_MESSAGES, UI_MESSAGES } from "./types.js";
+import {
+  VALIDATION_LIMITS,
+  ERROR_MESSAGES,
+  UI_MESSAGES,
+  validateTranscript,
+  validateVideoDuration,
+} from "./types.js";
 
-// Validation utilities
-export function validateTranscript(transcript) {
-  if (!transcript || typeof transcript !== "string") {
-    return ERROR_MESSAGES.INVALID_TRANSCRIPT;
-  }
-
-  const trimmed = transcript.trim();
-  if (trimmed.length === 0) {
-    return ERROR_MESSAGES.INVALID_TRANSCRIPT;
-  }
-
-  return null;
-}
-
-export function validateVideoDuration(duration) {
-  if (!duration || duration.trim() === "") {
-    return null; // Optional field
-  }
-
-  const durationPattern = /^([0-9]{1,2}):([0-5][0-9])$/;
-  if (!durationPattern.test(duration.trim())) {
-    return ERROR_MESSAGES.INVALID_DURATION;
-  }
-
-  return null;
-}
+// Re-export validation utilities from types.js
+export { validateTranscript, validateVideoDuration };
 
 // DOM utilities
 export function getElement(id) {
@@ -69,17 +51,20 @@ export function createKeywordTag(keyword, index, onRemove) {
   const tag = document.createElement("span");
   tag.className =
     "inline-flex items-center px-3 py-1 rounded-full text-sm bg-indigo-100 text-indigo-800";
-  tag.innerHTML = `
-    ${keyword}
-    <button type="button" class="ml-2 text-indigo-600 hover:text-indigo-800 focus:outline-none" data-index="${index}">
-      ×
-    </button>
-  `;
 
-  const removeButton = tag.querySelector("button");
-  if (removeButton) {
-    removeButton.addEventListener("click", () => onRemove(index));
-  }
+  // Create text node for keyword (prevents XSS - no innerHTML with user content)
+  const keywordText = document.createTextNode(keyword);
+  tag.appendChild(keywordText);
+
+  // Create remove button separately
+  const removeButton = document.createElement("button");
+  removeButton.type = "button";
+  removeButton.className = "ml-2 text-indigo-600 hover:text-indigo-800 focus:outline-none";
+  removeButton.dataset.index = String(index);
+  removeButton.textContent = "×";
+  removeButton.addEventListener("click", () => onRemove(index));
+
+  tag.appendChild(removeButton);
 
   return tag;
 }

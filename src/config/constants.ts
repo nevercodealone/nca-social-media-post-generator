@@ -22,18 +22,8 @@ const getGoogleModels = (): readonly string[] => {
   return ["gemini-2.5-pro", "gemini-2.5-flash"];
 };
 
-const getAnthropicModels = (): readonly string[] => {
-  const models = import.meta.env.ANTHROPIC_MODELS;
-  if (models) {
-    return models.split(",").map((m: string) => m.trim());
-  }
-  // Default models if not configured
-  return ["claude-3-haiku-20240307", "claude-3-sonnet-20240229"];
-};
-
 export const AI_MODELS = {
   google: getGoogleModels(),
-  anthropic: getAnthropicModels(),
 } as const;
 
 export const PLATFORM_CONFIGS: Record<SocialMediaPlatform, PlatformConfig> = {
@@ -111,6 +101,14 @@ export const ERROR_MESSAGES = {
   COPY_FAILED: "Text konnte nicht kopiert werden.",
   KEYWORD_DETECTION_FAILED: "Fehler beim Erkennen der Keywords: ",
   NETWORK_ERROR: "Netzwerkfehler. Bitte versuche es erneut.",
+} as const;
+
+export const VIDEO_CONSTANTS = {
+  MAX_SIZE_BYTES: 100 * 1024 * 1024,
+  ALLOWED_TYPES: ["video/mp4", "video/quicktime", "video/webm"] as const,
+  TRANSCRIPT_PROMPT: `Extrahiere das gesprochene Wort aus diesem Video als vollständiges Transkript.
+Gib NUR den gesprochenen Text zurück, ohne Zeitstempel, ohne Formatierung, ohne Erklärungen.
+Nur der reine gesprochene Text als durchgehender Fließtext.`,
 } as const;
 
 export const UI_MESSAGES = {

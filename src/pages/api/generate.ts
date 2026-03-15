@@ -1,26 +1,57 @@
 import type { APIRoute } from "astro";
 import type { GenerateRequest, GenerateResponse, SocialMediaPlatform } from "../../types/index.js";
 import { validateTranscript, validateVideoDuration } from "../../utils/validation.js";
-import { AIProviderManager } from "../../utils/ai-providers.js";
-import { PromptFactory } from "../../utils/prompt-factory.js";
+import { GoogleGeminiProvider } from "../../utils/ai-providers.js";
+import { ChatPrompts } from "../../config/chat-prompts.js";
 import { ResponseParser } from "../../utils/response-parser.js";
 
-// Initialize AI providers
 const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY;
-const ANTHROPIC_API_KEY = import.meta.env.ANTHROPIC_API_KEY;
 
-let aiProviderManager: AIProviderManager;
+let geminiProvider: GoogleGeminiProvider;
+
+// Chat session state: persists across requests for the same transcript
+let chatTranscript: string | null = null;
+let chatCorrectedTranscript: string | null = null;
+let chatKeywords: string[] = [];
+let chatModel: string = "";
 
 try {
-  aiProviderManager = new AIProviderManager(GOOGLE_GEMINI_API_KEY, ANTHROPIC_API_KEY);
+  if (GOOGLE_GEMINI_API_KEY) {
+    geminiProvider = new GoogleGeminiProvider(GOOGLE_GEMINI_API_KEY);
+  }
 } catch (error) {
   console.error("Failed to initialize AI providers:", error);
 }
 
+/**
+ * Ensures a chat session exists for the given transcript.
+ * On first call: starts chat, corrects transcript, extracts keywords.
+ * On subsequent calls with same transcript: reuses existing session.
+ */
+async function ensureChatSession(transcript: string): Promise<void> {
+  if (chatTranscript === transcript && chatCorrectedTranscript) {
+    // Same transcript, chat session already initialized
+    return;
+  }
+
+  // New transcript — start fresh chat session
+  geminiProvider.startChatSession();
+
+  const initialMessage = ChatPrompts.createInitialMessage(transcript);
+  const { text: initialText, model } = await geminiProvider.sendChatMessage(initialMessage);
+
+  const transcriptResult = ResponseParser.parseResponse("youtube", initialText);
+  const keywordResult = ResponseParser.parseResponse("keywords", initialText);
+
+  chatTranscript = transcript;
+  chatCorrectedTranscript = transcriptResult.transcript || transcript;
+  chatKeywords = keywordResult.keywords || [];
+  chatModel = model;
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    // Validate AI providers are available
-    if (!aiProviderManager) {
+    if (!geminiProvider) {
       return createErrorResponse(
         "AI-Dienste nicht verfügbar. Bitte überprüfen Sie die API-Konfiguration.",
         503
@@ -42,17 +73,45 @@ export const POST: APIRoute = async ({ request }) => {
     transcript = cleanedResult.transcript;
     transcriptCleaned = cleanedResult.cleaned;
 
-    // Create prompt for the specified platform
-    const prompt = PromptFactory.createPrompt(type, transcript, {
-      videoDuration,
-      keywords,
-    });
+    // For keywords type: initialize chat session and return corrected keywords
+    if (type === "keywords") {
+      await ensureChatSession(transcript);
+      return new Response(
+        JSON.stringify({
+          keywords: chatKeywords,
+          transcriptCleaned,
+          modelUsed: chatModel,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
 
-    // Generate content using AI providers
-    const { text, model } = await aiProviderManager.generateContent(prompt);
+    // For platform types: ensure chat session exists, then generate via chat
+    await ensureChatSession(transcript);
+
+    const platformMessage = ChatPrompts.createPlatformMessage(
+      type as "youtube" | "linkedin" | "twitter" | "instagram" | "tiktok",
+      { videoDuration }
+    );
+    const { text, model } = await geminiProvider.sendChatMessage(platformMessage);
 
     // Parse the response based on platform
     const parsedResponse = ResponseParser.parseResponse(type, text);
+
+    // Validate that the response contains meaningful content
+    const validationError = ResponseParser.validateResponse(type, parsedResponse);
+    if (validationError) {
+      return createErrorResponse(
+        "AI-Antwort enthält keine gültigen Inhalte",
+        502,
+        validationError
+      );
+    }
+
+    // For YouTube: use the corrected transcript from the chat session
+    if (type === "youtube") {
+      parsedResponse.transcript = chatCorrectedTranscript || undefined;
+    }
 
     // Create final response
     const responseData: GenerateResponse = {
@@ -63,14 +122,12 @@ export const POST: APIRoute = async ({ request }) => {
 
     return new Response(JSON.stringify(responseData), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
     console.error("Unerwarteter Fehler:", error);
 
-    if (error.message?.includes("All AI providers failed")) {
+    if (error.message?.includes("All AI providers failed") || error.message?.includes("Chat session")) {
       return createErrorResponse("Inhaltsgenerierung fehlgeschlagen", 503, error.message);
     }
 
@@ -136,7 +193,6 @@ function cleanTranscript(transcript: string): { transcript: string; cleaned: boo
   const words = transcript.trim().split(/\s+/);
   if (words.length > 0) {
     const lastWord = words[words.length - 1];
-    // Remove single characters OR single letter followed by period (e.g., "M.", "A.", "S.")
     if (lastWord.length === 1 || /^[A-Za-z]\.$/.test(lastWord)) {
       words.pop();
       const cleanedTranscript = words.join(" ");
@@ -155,8 +211,6 @@ function createErrorResponse(message: string, status: number, details?: string):
 
   return new Response(JSON.stringify(errorData), {
     status,
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
   });
 }
