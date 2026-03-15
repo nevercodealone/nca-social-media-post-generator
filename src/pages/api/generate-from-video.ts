@@ -1,26 +1,25 @@
 import type { APIRoute } from "astro";
+import type { GenerateAllResponse } from "../../types/index.js";
 import { validateVideoFile } from "../../utils/validation.js";
-import { AIProviderManager, GoogleGeminiProvider } from "../../utils/ai-providers.js";
-import { PromptFactory } from "../../utils/prompt-factory.js";
+import { GoogleGeminiProvider } from "../../utils/ai-providers.js";
+import { ChatPrompts } from "../../config/chat-prompts.js";
 import { ResponseParser } from "../../utils/response-parser.js";
 
 const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY;
 
-let aiProviderManager: AIProviderManager;
 let geminiProvider: GoogleGeminiProvider;
 
 try {
   if (GOOGLE_GEMINI_API_KEY) {
     geminiProvider = new GoogleGeminiProvider(GOOGLE_GEMINI_API_KEY);
-    aiProviderManager = new AIProviderManager([geminiProvider]);
   }
 } catch (error) {
-  console.error("Failed to initialize AI providers for video:", error);
+  console.error("Failed to initialize AI provider for video:", error);
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    if (!aiProviderManager || !geminiProvider) {
+    if (!geminiProvider) {
       return jsonResponse({ error: "AI-Dienste nicht verfügbar." }, 503);
     }
 
@@ -46,36 +45,62 @@ export const POST: APIRoute = async ({ request }) => {
     const arrayBuffer = await videoFile.arrayBuffer();
     const videoBuffer = Buffer.from(arrayBuffer);
 
-    // Step 1: Extract transcript from video via Gemini
-    const { text: transcript, model: transcriptModel } = await geminiProvider.extractTranscript(
+    // Step 1: Extract raw transcript from video via Gemini
+    const { text: rawTranscript, model: transcriptModel } = await geminiProvider.extractTranscript(
       videoBuffer,
       videoFile.type
     );
 
-    // Step 2: Detect keywords
-    const keywordPrompt = PromptFactory.createPrompt("keywords", transcript);
-    const { text: keywordText } = await aiProviderManager.generateContent(keywordPrompt);
-    const keywordResult = ResponseParser.parseResponse("keywords", keywordText);
+    // Step 2: Use chat session to correct transcript + generate all platforms
+    geminiProvider.startChatSession();
+
+    // Turn 1: Correct transcript + extract keywords
+    const initialMessage = ChatPrompts.createInitialMessage(rawTranscript);
+    const { text: initialText, model } = await geminiProvider.sendChatMessage(initialMessage);
+
+    const transcriptResult = ResponseParser.parseResponse("youtube", initialText);
+    const keywordResult = ResponseParser.parseResponse("keywords", initialText);
+    const correctedTranscript = transcriptResult.transcript || rawTranscript;
     const keywords = keywordResult.keywords || [];
 
-    // Step 3: Generate content for all platforms in parallel
-    const platforms = ["youtube", "linkedin", "instagram", "tiktok"] as const;
-    const results: Record<string, any> = {};
+    // Turn 2: YouTube
+    const ytMsg = ChatPrompts.createPlatformMessage("youtube");
+    const { text: ytText } = await geminiProvider.sendChatMessage(ytMsg);
+    const ytResult = ResponseParser.parseResponse("youtube", ytText);
 
-    const platformPromises = platforms.map(async (platform) => {
-      const prompt = PromptFactory.createPrompt(platform, transcript, { keywords });
-      const { text, model } = await aiProviderManager.generateContent(prompt);
-      const parsed = ResponseParser.parseResponse(platform, text);
-      results[platform] = { ...parsed, modelUsed: model };
-    });
+    // Turn 3: LinkedIn
+    const liMsg = ChatPrompts.createPlatformMessage("linkedin");
+    const { text: liText } = await geminiProvider.sendChatMessage(liMsg);
+    const liResult = ResponseParser.parseResponse("linkedin", liText);
 
-    await Promise.all(platformPromises);
+    // Turn 4: Twitter
+    const twMsg = ChatPrompts.createPlatformMessage("twitter");
+    const { text: twText } = await geminiProvider.sendChatMessage(twMsg);
+    const twResult = ResponseParser.parseResponse("twitter", twText);
 
+    // Turn 5: Instagram
+    const igMsg = ChatPrompts.createPlatformMessage("instagram");
+    const { text: igText } = await geminiProvider.sendChatMessage(igMsg);
+    const igResult = ResponseParser.parseResponse("instagram", igText);
+
+    // Turn 6: TikTok
+    const ttMsg = ChatPrompts.createPlatformMessage("tiktok");
+    const { text: ttText } = await geminiProvider.sendChatMessage(ttMsg);
+    const ttResult = ResponseParser.parseResponse("tiktok", ttText);
+
+    // Return in format compatible with video upload UI
     return jsonResponse({
-      transcript,
+      transcript: correctedTranscript,
       transcriptModel,
       keywords,
-      platforms: results,
+      platforms: {
+        youtube: { title: ytResult.title, description: ytResult.description, modelUsed: model },
+        linkedin: { linkedinPost: liResult.linkedinPost, modelUsed: model },
+        twitter: { twitterPost: twResult.twitterPost, modelUsed: model },
+        instagram: { instagramPost: igResult.instagramPost, modelUsed: model },
+        tiktok: { tiktokPost: ttResult.tiktokPost, modelUsed: model },
+      },
+      modelUsed: model,
     });
   } catch (error: any) {
     console.error("Video generation error:", error);
