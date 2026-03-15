@@ -8,6 +8,8 @@ export interface AIProvider {
   readonly models: readonly string[];
   generateContent(prompt: string): Promise<{ text: string; model: string }>;
   extractTranscript?(videoBuffer: Buffer, mimeType: string): Promise<{ text: string; model: string }>;
+  startChatSession?(): void;
+  sendChatMessage?(message: string): Promise<{ text: string; model: string }>;
 }
 
 export class GoogleGeminiProvider implements AIProvider {
@@ -70,6 +72,26 @@ export class GoogleGeminiProvider implements AIProvider {
     }
 
     throw new Error(`${this.name} video transcript extraction failed: ${errors.map((e) => e.message).join(", ")}`);
+  }
+
+  private chatSession: any = null;
+  private chatModel: string = "";
+
+  startChatSession(): void {
+    const model = this.models[0];
+    const genModel = this.genAI.getGenerativeModel({ model });
+    this.chatSession = genModel.startChat();
+    this.chatModel = model;
+  }
+
+  async sendChatMessage(message: string): Promise<{ text: string; model: string }> {
+    if (!this.chatSession) {
+      throw new Error("Chat session not started. Call startChatSession() first.");
+    }
+    const result = await this.chatSession.sendMessage(message);
+    const response = await result.response;
+    const text = response.text();
+    return { text, model: this.chatModel };
   }
 }
 
