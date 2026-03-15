@@ -9,22 +9,14 @@ FROM deps AS builder
 COPY . .
 RUN npm run build
 
-FROM base AS runner
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S astro -u 1001 -G nodejs
-
+FROM base AS runtime
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./
-
-RUN chown -R astro:nodejs .
-USER astro
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
 EXPOSE 4321
-
-
 CMD ["node", "./dist/server/entry.mjs"]
