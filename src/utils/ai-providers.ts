@@ -160,9 +160,14 @@ export class ZaiProvider implements AIProvider {
 
   async generateContent(prompt: string): Promise<{ text: string; model: string }> {
     const errors: AIError[] = [];
+    const timeoutMs = 30000; // 30 second timeout
 
     for (const model of this.models) {
       try {
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         const response = await fetch(`${this.baseUrl}/chat/completions`, {
           method: "POST",
           headers: {
@@ -173,7 +178,10 @@ export class ZaiProvider implements AIProvider {
             model,
             messages: [{ role: "user", content: prompt }],
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -213,31 +221,75 @@ export class ZaiProvider implements AIProvider {
       throw new Error("Chat session not started. Call startChatSession() first.");
     }
 
-    this.chatSession.messages.push({ role: "user", content: message });
+    const maxRetries = 3;
+    const timeoutMs = 30000; // 30 second timeout per request
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this._currentModel,
-        messages: this.chatSession.messages,
-      }),
-    });
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`${this.name} chat failed: [${response.status}] ${errorText}`);
+        // Build messages array for this attempt
+        // Include existing history plus the new message
+        const messagesForRequest = [
+          ...this.chatSession.messages,
+          { role: "user", content: message }
+        ];
+
+        const response = await fetch(`${this.baseUrl}/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: this._currentModel,
+            messages: messagesForRequest,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`[${response.status}] ${errorText}`);
+        }
+
+        const data = await response.json();
+        const text = data.choices?.[0]?.message?.content || "";
+
+        // Only add to history on success
+        this.chatSession.messages.push({ role: "user", content: message });
+        this.chatSession.messages.push({ role: "assistant", content: text });
+
+        return { text, model: this._currentModel };
+      } catch (error: unknown) {
+        const isTimeout = error instanceof Error && error.name === 'AbortError';
+        const retryable = isRetryableError(error);
+
+        // Don't retry if it's not a retryable error or timeout
+        if (!retryable && !isTimeout) {
+          throw error;
+        }
+
+        // If this was the last attempt, throw the error
+        if (attempt >= maxRetries - 1) {
+          throw error;
+        }
+
+        // Retry with exponential backoff
+        const delayMs = 2000 * Math.pow(2, attempt);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.warn(
+          `Z.ai retryable error (attempt ${attempt + 1}/${maxRetries}), retrying in ${delayMs}ms: ${errorMsg}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
     }
 
-    const data = await response.json();
-    const text = data.choices?.[0]?.message?.content || "";
-
-    this.chatSession.messages.push({ role: "assistant", content: text });
-
-    return { text, model: this._currentModel };
+    throw new Error("Unreachable");
   }
 }
 
