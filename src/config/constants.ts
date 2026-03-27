@@ -18,12 +18,20 @@ const getGoogleModels = (): readonly string[] => {
   if (models) {
     return models.split(",").map((m: string) => m.trim());
   }
-  // Default models if not configured
   return ["gemini-2.5-pro", "gemini-2.5-flash"];
+};
+
+const getZaiModels = (): readonly string[] => {
+  const models = import.meta.env.Z_AI_MODELS;
+  if (models) {
+    return models.split(",").map((m: string) => m.trim());
+  }
+  return ["glm-5", "glm-4.7"];
 };
 
 export const AI_MODELS = {
   google: getGoogleModels(),
+  zai: getZaiModels(),
 } as const;
 
 export const PLATFORM_CONFIGS: Record<SocialMediaPlatform, PlatformConfig> = {
