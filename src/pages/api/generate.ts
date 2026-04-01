@@ -1,13 +1,14 @@
 import type { APIRoute } from "astro";
 import type { GenerateRequest, GenerateResponse, SocialMediaPlatform } from "../../types/index.js";
 import { validateTranscript, validateVideoDuration } from "../../utils/validation.js";
-import { GoogleGeminiProvider } from "../../utils/ai-providers.js";
+import { ZaiProvider } from "../../utils/ai-providers.js";
 import { ChatPrompts } from "../../config/chat-prompts.js";
 import { ResponseParser } from "../../utils/response-parser.js";
+import { AI_MODELS } from "../../config/constants.js";
 
-const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY;
+const Z_AI_API_KEY = import.meta.env.Z_AI_API_KEY;
 
-let geminiProvider: GoogleGeminiProvider;
+let zaiProvider: ZaiProvider;
 
 // Chat session state: persists across requests for the same transcript
 let chatTranscript: string | null = null;
@@ -16,8 +17,8 @@ let chatKeywords: string[] = [];
 let chatModel: string = "";
 
 try {
-  if (GOOGLE_GEMINI_API_KEY) {
-    geminiProvider = new GoogleGeminiProvider(GOOGLE_GEMINI_API_KEY);
+  if (Z_AI_API_KEY) {
+    zaiProvider = new ZaiProvider(Z_AI_API_KEY);
   }
 } catch (error) {
   console.error("Failed to initialize AI providers:", error);
@@ -35,10 +36,10 @@ async function ensureChatSession(transcript: string): Promise<void> {
   }
 
   // New transcript — start fresh chat session
-  geminiProvider.startChatSession();
+  zaiProvider.startChatSession();
 
   const initialMessage = ChatPrompts.createInitialMessage(transcript);
-  const { text: initialText, model } = await geminiProvider.sendChatMessage(initialMessage);
+  const { text: initialText, model } = await zaiProvider.sendChatMessage(initialMessage);
 
   const transcriptResult = ResponseParser.parseResponse("youtube", initialText);
   const keywordResult = ResponseParser.parseResponse("keywords", initialText);
@@ -49,13 +50,45 @@ async function ensureChatSession(transcript: string): Promise<void> {
   chatModel = model;
 }
 
+/**
+ * Restarts the chat session on a fallback model and replays initial context.
+ * Returns true if fallback succeeded, false if no more models to try.
+ */
+async function restartChatOnFallbackModel(transcript: string): Promise<boolean> {
+  const currentModelIndex = AI_MODELS.zai.indexOf(chatModel);
+  const nextModel = AI_MODELS.zai[currentModelIndex + 1];
+
+  if (!nextModel) {
+    return false;
+  }
+
+  console.warn(`Restarting chat session on fallback model: ${nextModel}`);
+
+  // Force a fresh session by resetting state
+  chatTranscript = null;
+  chatCorrectedTranscript = null;
+
+  // Create a new provider with the fallback model order
+  zaiProvider.startChatSessionWithModel(nextModel);
+
+  const initialMessage = ChatPrompts.createInitialMessage(transcript);
+  const { text: initialText, model } = await zaiProvider.sendChatMessage(initialMessage);
+
+  const transcriptResult = ResponseParser.parseResponse("youtube", initialText);
+  const keywordResult = ResponseParser.parseResponse("keywords", initialText);
+
+  chatTranscript = transcript;
+  chatCorrectedTranscript = transcriptResult.transcript || transcript;
+  chatKeywords = keywordResult.keywords || [];
+  chatModel = model;
+
+  return true;
+}
+
 export const POST: APIRoute = async ({ request }) => {
   try {
-    if (!geminiProvider) {
-      return createErrorResponse(
-        "AI-Dienste nicht verfügbar. Bitte überprüfen Sie die API-Konfiguration.",
-        503
-      );
+    if (!zaiProvider) {
+      return createErrorResponse("AI-Dienste nicht verfügbar. Bitte Z_AI_API_KEY prüfen.", 503);
     }
 
     // Parse and validate request
@@ -64,7 +97,7 @@ export const POST: APIRoute = async ({ request }) => {
       return body.error;
     }
 
-    const { type = "youtube", videoDuration, keywords } = body;
+    const { type = "youtube", videoDuration } = body;
     let { transcript } = body;
     let transcriptCleaned = false;
 
@@ -93,7 +126,26 @@ export const POST: APIRoute = async ({ request }) => {
       type as "youtube" | "linkedin" | "twitter" | "instagram" | "tiktok",
       { videoDuration }
     );
-    const { text, model } = await geminiProvider.sendChatMessage(platformMessage);
+
+    let text: string;
+    let model: string;
+    try {
+      const result = await zaiProvider.sendChatMessage(platformMessage);
+      text = result.text;
+      model = result.model;
+    } catch (error: any) {
+      // If retries exhausted, try fallback model with fresh session
+      const is503or429 =
+        error.message && /\[503\s|\[429\s|Resource has been exhausted/i.test(error.message);
+      if (is503or429 && (await restartChatOnFallbackModel(transcript))) {
+        console.warn(`Retrying platform ${type} on fallback model ${chatModel}`);
+        const result = await zaiProvider.sendChatMessage(platformMessage);
+        text = result.text;
+        model = result.model;
+      } else {
+        throw error;
+      }
+    }
 
     // Parse the response based on platform
     const parsedResponse = ResponseParser.parseResponse(type, text);
@@ -101,11 +153,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Validate that the response contains meaningful content
     const validationError = ResponseParser.validateResponse(type, parsedResponse);
     if (validationError) {
-      return createErrorResponse(
-        "AI-Antwort enthält keine gültigen Inhalte",
-        502,
-        validationError
-      );
+      return createErrorResponse("AI-Antwort enthält keine gültigen Inhalte", 502, validationError);
     }
 
     // For YouTube: use the corrected transcript from the chat session
@@ -127,7 +175,10 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error: any) {
     console.error("Unerwarteter Fehler:", error);
 
-    if (error.message?.includes("All AI providers failed") || error.message?.includes("Chat session")) {
+    if (
+      error.message?.includes("All AI providers failed") ||
+      error.message?.includes("Chat session")
+    ) {
       return createErrorResponse("Inhaltsgenerierung fehlgeschlagen", 503, error.message);
     }
 

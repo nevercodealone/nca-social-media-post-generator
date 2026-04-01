@@ -1,26 +1,39 @@
 import type { APIRoute } from "astro";
-import type { GenerateAllResponse } from "../../types/index.js";
 import { validateVideoFile } from "../../utils/validation.js";
-import { GoogleGeminiProvider } from "../../utils/ai-providers.js";
+import { GoogleGeminiProvider, ZaiProvider } from "../../utils/ai-providers.js";
 import { ChatPrompts } from "../../config/chat-prompts.js";
 import { ResponseParser } from "../../utils/response-parser.js";
 
 const GOOGLE_GEMINI_API_KEY = import.meta.env.GOOGLE_GEMINI_API_KEY;
+const Z_AI_API_KEY = import.meta.env.Z_AI_API_KEY;
 
 let geminiProvider: GoogleGeminiProvider;
+let zaiProvider: ZaiProvider;
 
 try {
   if (GOOGLE_GEMINI_API_KEY) {
     geminiProvider = new GoogleGeminiProvider(GOOGLE_GEMINI_API_KEY);
   }
+  if (Z_AI_API_KEY) {
+    zaiProvider = new ZaiProvider(Z_AI_API_KEY);
+  }
 } catch (error) {
-  console.error("Failed to initialize AI provider for video:", error);
+  console.error("Failed to initialize AI providers:", error);
 }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     if (!geminiProvider) {
-      return jsonResponse({ error: "AI-Dienste nicht verfügbar." }, 503);
+      return jsonResponse(
+        { error: "Video-Verarbeitung nicht verfügbar. Bitte GOOGLE_GEMINI_API_KEY prüfen." },
+        503
+      );
+    }
+    if (!zaiProvider) {
+      return jsonResponse(
+        { error: "Text-Generierung nicht verfügbar. Bitte Z_AI_API_KEY prüfen." },
+        503
+      );
     }
 
     // Parse multipart form data
@@ -51,12 +64,12 @@ export const POST: APIRoute = async ({ request }) => {
       videoFile.type
     );
 
-    // Step 2: Use chat session to correct transcript + generate all platforms
-    geminiProvider.startChatSession();
+    // Step 2: Use Z.ai chat session to correct transcript + generate all platforms
+    zaiProvider.startChatSession();
 
     // Turn 1: Correct transcript + extract keywords
     const initialMessage = ChatPrompts.createInitialMessage(rawTranscript);
-    const { text: initialText, model } = await geminiProvider.sendChatMessage(initialMessage);
+    const { text: initialText, model } = await zaiProvider.sendChatMessage(initialMessage);
 
     const transcriptResult = ResponseParser.parseResponse("youtube", initialText);
     const keywordResult = ResponseParser.parseResponse("keywords", initialText);
@@ -65,27 +78,27 @@ export const POST: APIRoute = async ({ request }) => {
 
     // Turn 2: YouTube
     const ytMsg = ChatPrompts.createPlatformMessage("youtube");
-    const { text: ytText } = await geminiProvider.sendChatMessage(ytMsg);
+    const { text: ytText } = await zaiProvider.sendChatMessage(ytMsg);
     const ytResult = ResponseParser.parseResponse("youtube", ytText);
 
     // Turn 3: LinkedIn
     const liMsg = ChatPrompts.createPlatformMessage("linkedin");
-    const { text: liText } = await geminiProvider.sendChatMessage(liMsg);
+    const { text: liText } = await zaiProvider.sendChatMessage(liMsg);
     const liResult = ResponseParser.parseResponse("linkedin", liText);
 
     // Turn 4: Twitter
     const twMsg = ChatPrompts.createPlatformMessage("twitter");
-    const { text: twText } = await geminiProvider.sendChatMessage(twMsg);
+    const { text: twText } = await zaiProvider.sendChatMessage(twMsg);
     const twResult = ResponseParser.parseResponse("twitter", twText);
 
     // Turn 5: Instagram
     const igMsg = ChatPrompts.createPlatformMessage("instagram");
-    const { text: igText } = await geminiProvider.sendChatMessage(igMsg);
+    const { text: igText } = await zaiProvider.sendChatMessage(igMsg);
     const igResult = ResponseParser.parseResponse("instagram", igText);
 
     // Turn 6: TikTok
     const ttMsg = ChatPrompts.createPlatformMessage("tiktok");
-    const { text: ttText } = await geminiProvider.sendChatMessage(ttMsg);
+    const { text: ttText } = await zaiProvider.sendChatMessage(ttMsg);
     const ttResult = ResponseParser.parseResponse("tiktok", ttText);
 
     // Return in format compatible with video upload UI
